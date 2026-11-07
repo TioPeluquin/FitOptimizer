@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FitOptimizer: genera rutinas de entrenamiento según tu tiempo, objetivo y equipamiento.">
+  <title>FitOptimizer | Tu entrenamiento optimizado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" id="brandHome" aria-label="Ir al inicio">
+        <span class="brand-mark">F</span>
+        <span>Fit<span class="brand-accent">Optimizer</span></span>
+      </a>
+      <span class="topbar-tag"><span class="status-dot"></span> ENTRENAMIENTO INTELIGENTE</span>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen hero-screen active">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> ENTRENA CON INTENCIÓN</div>
+          <h1>Tu tiempo.<br>Tu objetivo.<br><span class="gradient-text">Tu mejor rutina.</span></h1>
+          <p class="hero-description">Crea una rutina de entrenamiento adaptada a tu tiempo disponible, equipamiento y estado muscular.</p>
+          <button class="btn btn-primary btn-large" id="startBtn">Crear mi rutina <span aria-hidden="true">→</span></button>
+          <div class="hero-note"><span class="sparkle">✦</span> Rutinas personalizadas mediante optimización algorítmica</div>
+        </div>
+        <div class="hero-visual" aria-label="Resumen ilustrativo de entrenamiento">
+          <div class="orb orb-one"></div><div class="orb orb-two"></div>
+          <div class="visual-card visual-card-main">
+            <div class="visual-card-top"><span class="mini-label">FITOPTIMIZER / 01</span><span class="live-pill">● ACTIVO</span></div>
+            <div class="visual-number">30<span> MIN</span></div>
+            <div class="visual-caption">Tu sesión, optimizada</div>
+            <div class="progress-track"><div class="progress-fill"></div></div>
+            <div class="visual-bottom"><span>Tiempo disponible</span><strong>100%</strong></div>
+          </div>
+          <div class="floating-chip chip-top"><span class="chip-icon">↗</span><span><strong>Fitness</strong><small>Evaluación de rutina</small></span></div>
+          <div class="floating-chip chip-bottom"><span class="chip-icon green">✓</span><span><strong>Restricciones</strong><small>Tiempo y recuperación</small></span></div>
+          <div class="visual-ring"></div>
+        </div>
+        <div class="hero-footer"><span>01 — PLANIFICA</span><span>02 — OPTIMIZA</span><span>03 — ENTRENA</span></div>
+      </section>
+
+      <section id="setupScreen" class="screen content-screen">
+        <div class="section-heading">
+          <button class="back-button" id="backHome" aria-label="Volver al inicio">←</button>
+          <div><div class="eyebrow">CONFIGURACIÓN / 01</div><h2>Prepara tu entrenamiento</h2><p>Cuéntanos qué necesitas para esta sesión.</p></div>
+        </div>
+        <form id="workoutForm" class="setup-grid">
+          <div class="form-card">
+            <div class="card-heading"><span class="step-number">01</span><div><h3>Tu sesión</h3><p>Define el tiempo y el objetivo.</p></div></div>
+            <label for="availableTime">Tiempo disponible <span class="required">*</span></label>
+            <div class="input-with-unit"><input id="availableTime" type="number" min="1" max="240" value="30" required><span>MINUTOS</span></div>
+            <label for="goal">Objetivo de entrenamiento</label>
+            <select id="goal"><option value="hipertrofia">Hipertrofia</option></select>
+            <p class="field-hint">En esta primera versión, el catálogo utiliza los puntajes de hipertrofia definidos en el informe.</p>
+          </div>
+
+          <div class="form-card">
+            <div class="card-heading"><span class="step-number">02</span><div><h3>Equipamiento</h3><p>Selecciona lo que tienes disponible.</p></div></div>
+            <div class="equipment-option">
+              <label class="check-row"><input type="checkbox" name="equipment" value="bodyweight" checked><span class="custom-check"></span><span><strong>Peso corporal</strong><small>Sin implementos adicionales</small></span></label>
+              <label class="check-row"><input type="checkbox" name="equipment" value="dumbbell"><span class="custom-check"></span><span><strong>Mancuernas</strong><small>Pesos libres</small></span></label>
+              <label class="check-row"><input type="checkbox" name="equipment" value="bar"><span class="custom-check"></span><span><strong>Barra de dominadas</strong><small>Barra fija</small></span></label>
+            </div>
+          </div>
+
+          <div class="form-card fatigue-card">
+            <div class="card-heading"><span class="step-number">03</span><div><h3>Fatiga previa</h3><p>Indica cómo se encuentra cada grupo muscular (0 a 10).</p></div></div>
+            <div class="fatigue-grid">
+              <label for="fatigueLegs">Piernas <output id="legsValue">0</output><input id="fatigueLegs" type="range" min="0" max="10" value="0"></label>
+              <label for="fatigueChest">Pecho <output id="chestValue">0</output><input id="fatigueChest" type="range" min="0" max="10" value="0"></label>
+              <label for="fatigueCore">Core <output id="coreValue">0</output><input id="fatigueCore" type="range" min="0" max="10" value="0"></label>
+              <label for="fatigueBack">Espalda <output id="backValue">0</output><input id="fatigueBack" type="range" min="0" max="10" value="0"></label>
+            </div>
+            <p class="field-hint">Los ejercicios de grupos con fatiga superior a 7 se excluirán de la selección.</p>
+          </div>
+          <div class="form-actions"><p><span class="required">*</span> Campo obligatorio.</p><button class="btn btn-primary btn-large" type="submit">Generar rutina <span aria-hidden="true">→</span></button></div>
+          <p id="formError" class="form-error" role="alert"></p>
+        </form>
+      </section>
+
+      <section id="resultScreen" class="screen content-screen">
+        <div class="section-heading result-heading">
+          <button class="back-button" id="backSetup" aria-label="Volver a configuración">←</button>
+          <div><div class="eyebrow">RESULTADO / 02</div><h2>Tu rutina optimizada</h2><p>Esta es la mejor combinación encontrada por el algoritmo.</p></div>
+        </div>
+        <div id="resultSummary" class="result-summary"></div>
+        <div class="result-layout">
+          <div class="result-main">
+            <div class="result-section-title"><div><span class="eyebrow">PLAN DE ENTRENAMIENTO</span><h3>Ejercicios seleccionados</h3></div><span id="exerciseCount" class="count-pill">0 EJERCICIOS</span></div>
+            <div id="exerciseList" class="exercise-list"></div>
+          </div>
+          <aside class="result-aside">
+            <div class="score-card"><span class="eyebrow">FITNESS / PUNTAJE</span><div id="fitnessScore" class="score-value">0</div><p>Valor de idoneidad de la rutina</p><div class="score-divider"></div><div id="constraintStatus" class="constraint-status"></div></div>
+            <div class="method-card"><span class="eyebrow">MÉTODO UTILIZADO</span><h3>Algoritmo genético</h3><p>Selección por torneo, cruce, mutación y elitismo.</p><span class="method-tag">VERSIÓN INICIAL</span></div>
+          </aside>
+        </div>
+        <div class="result-actions"><button class="btn btn-secondary" id="editBtn">← Modificar parámetros</button><button class="btn btn-primary" id="regenerateBtn">Generar otra rutina ↻</button></div>
+        <p id="resultMessage" class="result-message" aria-live="polite"></p>
+      </section>
+    </main>
+    <footer class="app-footer"><span>FITOPTIMIZER</span><span>PROTOTIPO ACADÉMICO · FASE 3</span></footer>
+  </div>
+  <script src="js/ejercicios.js"></script>
+  <script src="js/algoritmo.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
