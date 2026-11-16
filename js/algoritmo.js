@@ -1,15 +1,12 @@
-    /*
+
+/*
  * FITOPTIMIZER
- * Algoritmo genético generacional con elitismo.
- *
- * Representación cromosómica:
- * 1 = ejercicio seleccionado.
- * 0 = ejercicio no seleccionado.
+ * Algoritmo genético y selección de rutinas predefinidas.
  */
 
-
+// ==================================================
 // 1. CONFIGURACIÓN DEL ALGORITMO GENÉTICO
-
+// ==================================================
 
 const CONFIG_ALGORITMO = {
     tamanoPoblacion: 30,
@@ -17,44 +14,130 @@ const CONFIG_ALGORITMO = {
     probabilidadMutacion: 0.04,
     cantidadElite: 2,
     penalizacionTiempo: 5,
-    penalizacionFatiga: 5,
+    penalizacionCarga: 3,
     maximoMinutosMusculares: 20
 };
 
+const VALOR_NIVEL = {
+    principiante: 1,
+    intermedio: 2,
+    avanzado: 3
+};
 
 
-// 2. CALCULAR APTITUD (FITNESS)
+// ==================================================
+// 2. OBTENER BENEFICIO SEGÚN EL OBJETIVO
+// ==================================================
+
+function obtenerBeneficio(ejercicio, objetivo) {
+    return ejercicio.beneficios?.[objetivo] ?? ejercicio.beneficio;
+}
 
 
-function calcularAptitud(ejerciciosSeleccionados, tiempoMaximo) {
+// ==================================================
+// 3. COMPROBAR SI EL NIVEL ES ADECUADO
+// ==================================================
 
-    const tiempoTotal = ejerciciosSeleccionados.reduce(
-        (suma, ejercicio) => suma + ejercicio.minutes, 0
+function nivelPermitido(nivelEjercicio, nivelUsuario) {
+
+    return (
+        (VALOR_NIVEL[nivelEjercicio] || 1) <=
+        (VALOR_NIVEL[nivelUsuario] || 1)
+    );
+}
+
+
+// ==================================================
+// 4. COMPROBAR SI UN EJERCICIO ESTÁ DISPONIBLE
+// ==================================================
+
+function ejercicioDisponible(ejercicio, datos) {
+
+    const tieneEquipamiento = ejercicio.equipamiento.every(
+        elemento => datos.equipamiento.includes(elemento)
     );
 
-    const beneficioTotal = ejerciciosSeleccionados.reduce(
-        (suma, ejercicio) => suma + ejercicio.benefit, 0
+    const nivelAdecuado = nivelPermitido(
+        ejercicio.nivel,
+        datos.nivel
     );
 
-    const tiempoMuscular = {};
+    const gruposMusculares = [
+        ejercicio.claveMuscular,
+        ...(ejercicio.musculosSecundarios || [])
+    ];
+
+    const fatigaAceptable = gruposMusculares.every(
+        grupo => (datos.fatiga[grupo] ?? 0) <= 7
+    );
+
+    return (
+        tieneEquipamiento &&
+        nivelAdecuado &&
+        fatigaAceptable
+    );
+}
+
+
+// ==================================================
+// 5. CALCULAR LA CARGA MUSCULAR
+// ==================================================
+
+function calcularCargaMuscular(ejerciciosSeleccionados) {
+
+    const cargaMuscular = {};
 
     ejerciciosSeleccionados.forEach(ejercicio => {
 
-        tiempoMuscular[ejercicio.muscleKey] =
-            (tiempoMuscular[ejercicio.muscleKey] || 0) +
-            ejercicio.minutes;
+        const grupos = [
+            ejercicio.claveMuscular,
+            ...(ejercicio.musculosSecundarios || [])
+        ];
 
+        grupos.forEach(grupo => {
+
+            cargaMuscular[grupo] =
+                (cargaMuscular[grupo] || 0) +
+                ejercicio.minutos;
+        });
     });
 
-    // Penalización por superar el tiempo disponible
-    const penalizacionPorTiempo =
+    return cargaMuscular;
+}
+
+
+// ==================================================
+// 6. CALCULAR LA APTITUD DE UNA RUTINA
+// ==================================================
+
+function calcularAptitud(
+    ejerciciosSeleccionados,
+    tiempoMaximo,
+    objetivo
+) {
+
+    const tiempoTotal = ejerciciosSeleccionados.reduce(
+        (suma, ejercicio) => suma + ejercicio.minutos,
+        0
+    );
+
+    const beneficioTotal = ejerciciosSeleccionados.reduce(
+        (suma, ejercicio) =>
+            suma + obtenerBeneficio(ejercicio, objetivo),
+        0
+    );
+
+    const cargaMuscular = calcularCargaMuscular(
+        ejerciciosSeleccionados
+    );
+
+    const penalizacionTiempo =
         CONFIG_ALGORITMO.penalizacionTiempo *
         Math.max(0, tiempoTotal - tiempoMaximo);
 
-    // Penalización por superar el límite muscular
-    const penalizacionPorFatiga =
-        CONFIG_ALGORITMO.penalizacionFatiga *
-        Object.values(tiempoMuscular).reduce(
+    const penalizacionCarga =
+        CONFIG_ALGORITMO.penalizacionCarga *
+        Object.values(cargaMuscular).reduce(
             (suma, minutos) =>
                 suma + Math.max(
                     0,
@@ -65,41 +148,49 @@ function calcularAptitud(ejerciciosSeleccionados, tiempoMaximo) {
 
     const aptitud =
         beneficioTotal -
-        penalizacionPorTiempo -
-        penalizacionPorFatiga;
+        penalizacionTiempo -
+        penalizacionCarga;
 
     return {
-        fitness: aptitud,
-        totalTime: tiempoTotal,
-        totalBenefit: beneficioTotal,
-        timePenalty: penalizacionPorTiempo,
-        fatiguePenalty: penalizacionPorFatiga,
-        muscleTime: tiempoMuscular
+        aptitud,
+        tiempoTotal,
+        beneficioTotal,
+        cargaMuscular,
+        penalizacionTiempo,
+        penalizacionCarga
     };
 }
 
 
-// 3. COMPROBAR SI UNA RUTINA ES VÁLIDA
-
+// ==================================================
+// 7. COMPROBAR SI UNA RUTINA ES VÁLIDA
+// ==================================================
 
 function esRutinaValida(ejerciciosSeleccionados, tiempoMaximo) {
 
-    const estadisticas = calcularAptitud(
-        ejerciciosSeleccionados,
-        tiempoMaximo
+    const tiempoTotal = ejerciciosSeleccionados.reduce(
+        (suma, ejercicio) => suma + ejercicio.minutos,
+        0
     );
 
-    return estadisticas.totalTime <= tiempoMaximo &&
-        Object.values(estadisticas.muscleTime).every(
+    const cargaMuscular = calcularCargaMuscular(
+        ejerciciosSeleccionados
+    );
+
+    return (
+        tiempoTotal > 0 &&
+        tiempoTotal <= tiempoMaximo &&
+        Object.values(cargaMuscular).every(
             minutos =>
                 minutos <= CONFIG_ALGORITMO.maximoMinutosMusculares
-        );
+        )
+    );
 }
 
 
-
-// 4. CREAR CROMOSOMA ALEATORIO
-
+// ==================================================
+// 8. CREAR UN CROMOSOMA ALEATORIO
+// ==================================================
 
 function crearCromosomaAleatorio(cantidadGenes) {
 
@@ -110,11 +201,14 @@ function crearCromosomaAleatorio(cantidadGenes) {
 }
 
 
+// ==================================================
+// 9. DECODIFICAR UN CROMOSOMA
+// ==================================================
 
-// 5. DECODIFICAR CROMOSOMA
-
-
-function decodificarCromosoma(cromosoma, ejerciciosDisponibles) {
+function decodificarCromosoma(
+    cromosoma,
+    ejerciciosDisponibles
+) {
 
     return ejerciciosDisponibles.filter(
         (ejercicio, indice) => cromosoma[indice] === 1
@@ -122,49 +216,54 @@ function decodificarCromosoma(cromosoma, ejerciciosDisponibles) {
 }
 
 
-
-// 6. REPARAR CROMOSOMA
-
+// ==================================================
+// 10. REPARAR UN CROMOSOMA
+// ==================================================
 
 function repararCromosoma(
     cromosoma,
     ejerciciosDisponibles,
-    tiempoMaximo
+    tiempoMaximo,
+    objetivo
 ) {
 
-    // Crear una copia del cromosoma original
     const cromosomaReparado = [...cromosoma];
 
-    let ejerciciosSeleccionados = decodificarCromosoma(
+    let seleccionados = decodificarCromosoma(
         cromosomaReparado,
         ejerciciosDisponibles
     );
 
-    // Eliminar ejercicios hasta cumplir las restricciones
     while (
-        ejerciciosSeleccionados.length > 0 &&
-        !esRutinaValida(ejerciciosSeleccionados, tiempoMaximo)
+        seleccionados.length > 0 &&
+        !esRutinaValida(seleccionados, tiempoMaximo)
     ) {
 
-        // Buscar los índices de los ejercicios seleccionados
         const indicesSeleccionados = cromosomaReparado
-            .map((gen, indice) => gen ? indice : -1)
+            .map((gen, indice) => gen === 1 ? indice : -1)
             .filter(indice => indice >= 0);
 
-        // Identificar el ejercicio con menor beneficio por minuto
         const indiceEliminar = indicesSeleccionados.sort(
-            (a, b) =>
-                (ejerciciosDisponibles[a].benefit /
-                    ejerciciosDisponibles[a].minutes) -
-                (ejerciciosDisponibles[b].benefit /
-                    ejerciciosDisponibles[b].minutes)
+            (a, b) => {
+
+                const ejercicioA = ejerciciosDisponibles[a];
+                const ejercicioB = ejerciciosDisponibles[b];
+
+                const relacionA =
+                    obtenerBeneficio(ejercicioA, objetivo) /
+                    ejercicioA.minutos;
+
+                const relacionB =
+                    obtenerBeneficio(ejercicioB, objetivo) /
+                    ejercicioB.minutos;
+
+                return relacionA - relacionB;
+            }
         )[0];
 
-        // Eliminar el ejercicio seleccionado
         cromosomaReparado[indiceEliminar] = 0;
 
-        // Actualizar la rutina
-        ejerciciosSeleccionados = decodificarCromosoma(
+        seleccionados = decodificarCromosoma(
             cromosomaReparado,
             ejerciciosDisponibles
         );
@@ -174,49 +273,50 @@ function repararCromosoma(
 }
 
 
-
-// 7. EVALUAR CROMOSOMA
-
+// ==================================================
+// 11. EVALUAR UN CROMOSOMA
+// ==================================================
 
 function evaluarCromosoma(
     cromosoma,
     ejerciciosDisponibles,
-    tiempoMaximo
+    tiempoMaximo,
+    objetivo
 ) {
 
-    // Reparar primero el cromosoma
     const cromosomaReparado = repararCromosoma(
         cromosoma,
         ejerciciosDisponibles,
-        tiempoMaximo
+        tiempoMaximo,
+        objetivo
     );
 
-    // Obtener los ejercicios seleccionados
-    const ejerciciosSeleccionados = decodificarCromosoma(
+    const seleccionados = decodificarCromosoma(
         cromosomaReparado,
         ejerciciosDisponibles
     );
 
-    // Calcular sus estadísticas
     const estadisticas = calcularAptitud(
-        ejerciciosSeleccionados,
-        tiempoMaximo
+        seleccionados,
+        tiempoMaximo,
+        objetivo
     );
 
     return {
-        chromosome: cromosomaReparado,
-        selected: ejerciciosSeleccionados,
+        cromosoma: cromosomaReparado,
+        seleccionados,
         ...estadisticas,
-        valid: esRutinaValida(
-            ejerciciosSeleccionados,
+        valido: esRutinaValida(
+            seleccionados,
             tiempoMaximo
         )
     };
 }
 
 
-
-// 8. SELECCIÓN POR TORNEO
+// ==================================================
+// 12. SELECCIÓN POR TORNEO
+// ==================================================
 
 function seleccionPorTorneo(poblacion, tamanoTorneo = 3) {
 
@@ -224,17 +324,15 @@ function seleccionPorTorneo(poblacion, tamanoTorneo = 3) {
 
     for (let i = 0; i < tamanoTorneo; i++) {
 
-        // Seleccionar un individuo aleatorio
-        const indiceAleatorio = Math.floor(
+        const indice = Math.floor(
             Math.random() * poblacion.length
         );
 
-        const participante = poblacion[indiceAleatorio];
+        const participante = poblacion[indice];
 
-        // Comparar su aptitud con la del ganador
         if (
             ganador === null ||
-            participante.fitness > ganador.fitness
+            participante.aptitud > ganador.aptitud
         ) {
             ganador = participante;
         }
@@ -244,24 +342,21 @@ function seleccionPorTorneo(poblacion, tamanoTorneo = 3) {
 }
 
 
-
-// 9. REALIZAR CRUCE
-
+// ==================================================
+// 13. CRUCE DE DOS CROMOSOMAS
+// ==================================================
 
 function realizarCruce(padreA, padreB) {
 
-    // Si hay menos de dos genes, devolver una copia
     if (padreA.length < 2) {
         return [...padreA];
     }
 
-    // Elegir un punto de corte aleatorio
     const puntoCorte =
         1 + Math.floor(
             Math.random() * (padreA.length - 1)
         );
 
-    // Combinar las partes de ambos padres
     return [
         ...padreA.slice(0, puntoCorte),
         ...padreB.slice(puntoCorte)
@@ -269,15 +364,14 @@ function realizarCruce(padreA, padreB) {
 }
 
 
-
-// 10. APLICAR MUTACIÓN
-
+// ==================================================
+// 14. APLICAR MUTACIÓN
+// ==================================================
 
 function aplicarMutacion(cromosoma) {
 
     return cromosoma.map(gen => {
 
-        // Comprobar si el gen debe mutar
         if (
             Math.random() <
             CONFIG_ALGORITMO.probabilidadMutacion
@@ -290,161 +384,205 @@ function aplicarMutacion(cromosoma) {
 }
 
 
-
-// 11. CONSERVAR LAS MEJORES SOLUCIONES
-
+// ==================================================
+// 15. CONSERVAR LAS MEJORES SOLUCIONES
+// ==================================================
 
 function conservarMejores(poblacion, cantidad) {
 
-    // Ordenar de mayor a menor según el Fitness
-    const poblacionOrdenada = [...poblacion].sort(
-        (a, b) => b.fitness - a.fitness
-    );
-
-    // Guardar los mejores individuos
-    return poblacionOrdenada
+    return [...poblacion]
+        .sort((a, b) => b.aptitud - a.aptitud)
         .slice(0, cantidad)
         .map(individuo => ({
             ...individuo,
-            chromosome: [...individuo.chromosome],
-            selected: [...individuo.selected]
+            cromosoma: [...individuo.cromosoma],
+            seleccionados: [...individuo.seleccionados]
         }));
 }
 
 
+// ==================================================
+// 16. OBTENER UNA RUTINA PREDEFINIDA
+// ==================================================
 
-// 12. GENERAR RUTINA CON ALGORITMO GENÉTICO
+function obtenerRutinaPredefinida(idRutina, datos) {
 
-
-function generarRutina({ maxTime, equipment, fatigue }) {
-
-    // Filtrar ejercicios según equipamiento y fatiga
-    const ejerciciosDisponibles = EXERCISES.filter(ejercicio =>
-
-        ejercicio.equipment.every(
-            elemento => equipment.includes(elemento)
-        ) &&
-
-        (fatigue[ejercicio.muscleKey] ?? 0) <= 7
-
+    const rutina = RUTINAS_PREDEFINIDAS.find(
+        elemento => elemento.id === idRutina
     );
 
-    // Comprobar si existen ejercicios disponibles
-    if (ejerciciosDisponibles.length === 0) {
-
+    if (!rutina) {
         return {
-            error: "No hay ejercicios disponibles con el equipamiento y el nivel de fatiga seleccionados."
+            error: "No se encontró la rutina seleccionada."
         };
     }
 
-    // Crear la población inicial con una solución vacía
+    const ejerciciosRutina = rutina.ejercicios.map(id =>
+        EJERCICIOS.find(ejercicio => ejercicio.id === id)
+    );
+
+    const ejerciciosNoDisponibles = ejerciciosRutina.filter(
+        ejercicio =>
+            !ejercicio || !ejercicioDisponible(ejercicio, datos)
+    );
+
+    if (ejerciciosNoDisponibles.length > 0) {
+        return {
+            error: "Esta rutina contiene ejercicios que no coinciden con tu equipamiento, nivel o fatiga. Modifica tus datos o elige otra rutina."
+        };
+    }
+
+    const estadisticas = calcularAptitud(
+        ejerciciosRutina,
+        datos.tiempoMaximo,
+        rutina.objetivo
+    );
+
+    if (!esRutinaValida(ejerciciosRutina, datos.tiempoMaximo)) {
+        return {
+            error: `Esta rutina necesita ${estadisticas.tiempoTotal} minutos. Aumenta tu tiempo disponible para seleccionarla.`
+        };
+    }
+
+    return {
+        tipo: "predefinida",
+        nombreRutina: rutina.nombre,
+        categoria: rutina.categoria,
+        objetivo: rutina.objetivo,
+        nivelRutina: rutina.nivel,
+        seleccionados: ejerciciosRutina,
+        ...estadisticas,
+        generaciones: 0,
+        tamanoPoblacion: 0,
+        valido: true
+    };
+}
+
+
+// ==================================================
+// 17. GENERAR UNA RUTINA PERSONALIZADA
+// ==================================================
+
+function generarRutina(datos) {
+
+    const ejerciciosDisponibles = EJERCICIOS.filter(
+        ejercicio => ejercicioDisponible(ejercicio, datos)
+    );
+
+    if (ejerciciosDisponibles.length === 0) {
+        return {
+            error: "No existen ejercicios disponibles con las condiciones seleccionadas."
+        };
+    }
+
+    if (
+        !Number.isFinite(datos.tiempoMaximo) ||
+        datos.tiempoMaximo <= 0
+    ) {
+        return {
+            error: "El tiempo disponible no es válido."
+        };
+    }
+
+    // Crear población inicial.
+
     const poblacionInicial = Array.from(
         {
-            length: Math.max(
-                0,
-                CONFIG_ALGORITMO.tamanoPoblacion - 1
-            )
+            length: CONFIG_ALGORITMO.tamanoPoblacion - 1
         },
         () => evaluarCromosoma(
             crearCromosomaAleatorio(
                 ejerciciosDisponibles.length
             ),
             ejerciciosDisponibles,
-            maxTime
+            datos.tiempoMaximo,
+            datos.objetivo
         )
     );
 
-    // Agregar una rutina vacía válida
     poblacionInicial.push(
         evaluarCromosoma(
             Array(ejerciciosDisponibles.length).fill(0),
             ejerciciosDisponibles,
-            maxTime
+            datos.tiempoMaximo,
+            datos.objetivo
         )
     );
 
     let poblacion = poblacionInicial;
 
+    // Evolución de la población.
 
-    // REPETIR DURANTE LAS GENERACIONES
     for (
         let generacion = 0;
         generacion < CONFIG_ALGORITMO.cantidadGeneraciones;
         generacion++
     ) {
 
-        // Ordenar la población según su aptitud
         poblacion.sort(
-            (a, b) => b.fitness - a.fitness
+            (a, b) => b.aptitud - a.aptitud
         );
 
-        // Aplicar elitismo
         const nuevaPoblacion = conservarMejores(
             poblacion,
             CONFIG_ALGORITMO.cantidadElite
         );
 
-        // Generar nuevos individuos
         while (
             nuevaPoblacion.length <
             CONFIG_ALGORITMO.tamanoPoblacion
         ) {
 
-            // Seleccionar los padres
             const padreA = seleccionPorTorneo(poblacion);
             const padreB = seleccionPorTorneo(poblacion);
 
-            // Realizar el cruce
             let hijo = realizarCruce(
-                padreA.chromosome,
-                padreB.chromosome
+                padreA.cromosoma,
+                padreB.cromosoma
             );
 
-            // Aplicar mutación
             hijo = aplicarMutacion(hijo);
 
-            // Evaluar al nuevo individuo
             nuevaPoblacion.push(
                 evaluarCromosoma(
                     hijo,
                     ejerciciosDisponibles,
-                    maxTime
+                    datos.tiempoMaximo,
+                    datos.objetivo
                 )
             );
         }
 
-        // Reemplazar la población anterior
         poblacion = nuevaPoblacion;
     }
 
-
-
-    //13. OBTENER LA MEJOR RUTINA
-    
-
     poblacion.sort(
-        (a, b) => b.fitness - a.fitness
+        (a, b) => b.aptitud - a.aptitud
     );
 
     const mejorRutina = poblacion[0];
 
-    return {
+    if (!mejorRutina.valido || mejorRutina.seleccionados.length === 0) {
+        return {
+            error: "No fue posible crear una rutina válida. Prueba aumentando el tiempo o modificando tus condiciones."
+        };
+    }
 
-        // Mantener la estructura de resultados
-        // que utiliza el resto del prototipo
+    return {
         ...mejorRutina,
 
-        // Ordenar ejercicios por beneficio por minuto
-        selected: [...mejorRutina.selected].sort(
+        tipo: "personalizada",
+        nombreRutina: "Rutina personalizada",
+
+        seleccionados: [...mejorRutina.seleccionados].sort(
             (a, b) =>
-                (b.benefit / b.minutes) -
-                (a.benefit / a.minutes)
+                obtenerBeneficio(b, datos.objetivo) / b.minutos -
+                obtenerBeneficio(a, datos.objetivo) / a.minutos
         ),
 
-        candidates: ejerciciosDisponibles,
-
-        generations: CONFIG_ALGORITMO.cantidadGeneraciones,
-
-        populationSize: CONFIG_ALGORITMO.tamanoPoblacion
+        candidatos: ejerciciosDisponibles,
+        generaciones: CONFIG_ALGORITMO.cantidadGeneraciones,
+        tamanoPoblacion: CONFIG_ALGORITMO.tamanoPoblacion
     };
 }
+
