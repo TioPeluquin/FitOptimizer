@@ -145,22 +145,78 @@ cargarRutinasPredefinidas();
 // ==================================================
 
 function actualizarModalidad() {
-
-    const modalidad = document.getElementById(
-        "modalidadEntrenamiento"
-    );
-
-    const selectorRutina = document.getElementById(
-        "grupoRutinas"
-    );
-
-    if (!modalidad || !selectorRutina) return;
-
-    selectorRutina.style.display =
-        modalidad.value === "predefinida"
-            ? "block"
-            : "none";
+    const modalidad = document.getElementById("modalidadEntrenamiento")?.value || "personalizada";
+    const rutinas = document.getElementById("grupoRutinas");
+    const manual = document.getElementById("grupoManual");
+    const algoritmoAntiguo = document.getElementById("grupoAlgoritmo");
+    if (rutinas) rutinas.style.display = modalidad === "predefinida" ? "block" : "none";
+    if (manual) manual.style.display = modalidad === "manual" ? "block" : "none";
+    if (algoritmoAntiguo) algoritmoAntiguo.style.display = "none";
+    if (modalidad === "manual") actualizarEjerciciosManuales();
 }
+
+// Mostrar ejercicios compatibles con las condiciones actuales.
+// Conservamos los checks al actualizar equipamiento, nivel o fatiga.
+function actualizarEjerciciosManuales() {
+    const contenedor = document.getElementById("listaEjerciciosManual");
+    if (!contenedor) return;
+    const anteriores = new Set([...contenedor.querySelectorAll('input[name="ejercicioManual"]:checked')]
+        .map(c => c.value));
+    const datos = obtenerDatosFormulario();
+    const disponibles = EJERCICIOS.filter(e => ejercicioDisponible(e, datos));
+    contenedor.replaceChildren();
+    for (const ejercicio of disponibles) {
+        const etiqueta = document.createElement("label");
+        etiqueta.className = "manual-exercise";
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.name = "ejercicioManual";
+        check.value = ejercicio.id;
+        check.checked = anteriores.has(ejercicio.id);
+        const info = document.createElement("span");
+        info.className = "manual-exercise-info";
+        const titulo = document.createElement("strong");
+        titulo.textContent = ejercicio.nombre;
+        const descripcion = document.createElement("small");
+        descripcion.textContent = `${ejercicio.grupoMuscular} · ${ejercicio.descripcion}`;
+        info.append(titulo, descripcion);
+        const tiempo = document.createElement("span");
+        tiempo.className = "manual-exercise-time";
+        tiempo.textContent = `${ejercicio.minutos} min`;
+        etiqueta.append(check, info, tiempo);
+        contenedor.appendChild(etiqueta);
+    }
+    if (!disponibles.length) {
+        contenedor.textContent = "No hay ejercicios compatibles. Ajusta nivel, equipamiento o fatiga.";
+    }
+    actualizarResumenManual();
+}
+
+function actualizarResumenManual() {
+    const resumen = document.getElementById("resumenManual");
+    if (!resumen) return;
+    const ids = [...document.querySelectorAll('input[name="ejercicioManual"]:checked')].map(c => c.value);
+    const ejercicios = ids.map(id => EJERCICIOS.find(e => e.id === id)).filter(Boolean);
+    const tiempo = ejercicios.reduce((total, e) => total + e.minutos, 0);
+    const tiempoMaximo = obtenerValorNumerico("availableTime", 30);
+    const sobrecarga = ejercicios.length && !esRutinaValida(ejercicios, tiempoMaximo);
+    resumen.classList.toggle("warning", Boolean(sobrecarga));
+    resumen.textContent = `${ids.length} ejercicio(s) seleccionado(s) · ${tiempo} de ${tiempoMaximo} minutos` +
+        (sobrecarga ? " · Revisa el tiempo o la carga muscular." : "");
+}
+
+for (const id of ["availableTime", "objetivo", "nivel", "fatigueLegs", "fatigueChest", "fatigueCore", "fatigueBack",
+    "fatigaPiernas", "fatigaPecho", "fatigaAbdomen", "fatigaEspalda", "fatigaHombros", "fatigaBiceps", "fatigaTriceps", "fatigaGluteos", "fatigaPantorrillas"]) {
+    document.getElementById(id)?.addEventListener("input", () => {
+        if (document.getElementById("modalidadEntrenamiento")?.value === "manual") actualizarEjerciciosManuales();
+    });
+}
+document.querySelectorAll('input[name="equipment"]').forEach(c =>
+    c.addEventListener("change", () => {
+        if (document.getElementById("modalidadEntrenamiento")?.value === "manual") actualizarEjerciciosManuales();
+    })
+);
+document.getElementById("listaEjerciciosManual")?.addEventListener("change", actualizarResumenManual);
 
 document.getElementById("modalidadEntrenamiento")
     ?.addEventListener("change", actualizarModalidad);
@@ -259,6 +315,9 @@ function obtenerDatosFormulario() {
             document.getElementById("modalidadEntrenamiento")?.value ||
             "personalizada",
 
+        ejerciciosManuales: [...document.querySelectorAll('input[name="ejercicioManual"]:checked')]
+            .map(c => c.value),
+
         idRutina:
             document.getElementById("rutinaSeleccionada")?.value || ""
     };
@@ -304,7 +363,7 @@ function validarFormulario(datos) {
     }
 
     if (
-        !["predefinida", "personalizada"].includes(datos.modalidad)
+        !["predefinida", "personalizada", "manual"].includes(datos.modalidad)
     ) {
         return "Selecciona una modalidad de entrenamiento.";
     }
@@ -314,6 +373,17 @@ function validarFormulario(datos) {
         !datos.idRutina
     ) {
         return "Selecciona una rutina del catálogo.";
+    }
+
+    if (datos.modalidad === "manual") {
+        if (!datos.ejerciciosManuales.length) return "Selecciona al menos un ejercicio.";
+        const seleccionados = datos.ejerciciosManuales.map(id => EJERCICIOS.find(e => e.id === id));
+        if (seleccionados.some(e => !e || !ejercicioDisponible(e, datos))) {
+            return "Revisa tus ejercicios: uno de ellos ya no está disponible.";
+        }
+        if (!esRutinaValida(seleccionados, datos.tiempoMaximo)) {
+            return "Tus ejercicios seleccionados superan el tiempo o la carga muscular permitida.";
+        }
     }
 
     if (
@@ -407,9 +477,9 @@ function mostrarResultados(resultado, datos) {
 
     if (modalidadResultado) {
         modalidadResultado.textContent =
-            resultado.tipo === "predefinida"
-                ? "Rutina predefinida"
-                : "Rutina personalizada por algoritmo genético";
+            resultado.tipo === "predefinida" ? "Rutina del catálogo" :
+            resultado.tipo === "manual" ? "Rutina construida y mejorada según tus elecciones" :
+            "Rutina personalizada automáticamente";
     }
 
     const objetivoResultado = document.getElementById(
@@ -447,6 +517,8 @@ function mostrarResultados(resultado, datos) {
                         <div class="exercise-info">
 
                             <strong>${ejercicio.nombre}</strong>
+                            ${resultado.tipo === "manual" ?
+                                `<small class="exercise-flag">${resultado.ejerciciosOriginales.includes(ejercicio.id) ? "✓ Tu elección" : "+ Sugerido"}</small>` : ""}
 
                             <small>
                                 ${ejercicio.grupoMuscular}
@@ -486,10 +558,18 @@ function mostrarResultados(resultado, datos) {
 
     if (mensaje) {
 
-        mensaje.textContent =
-            resultado.tipo === "predefinida"
-                ? "Rutina seleccionada desde el catálogo de FitOptimizer."
-                : `Se evaluaron ${resultado.tamanoPoblacion} individuos durante ${resultado.generaciones} generaciones.`;
+        if (resultado.tipo === "predefinida") {
+            mensaje.textContent = "Rutina seleccionada desde el catálogo de FitOptimizer.";
+        } else if (resultado.tipo === "manual") {
+            mensaje.textContent =
+                `Se conservaron ${resultado.ejerciciosOriginales.length} ejercicios elegidos por ti. ` +
+                `Se sugirieron ${resultado.ejerciciosAgregados.length} adicionales. ` +
+                `Mejora de fitness: +${resultado.mejoriaFitness}. ` +
+                `Evaluaciones: ${resultado.evaluaciones}; iteraciones: ${resultado.iteraciones}; ` +
+                `reinicios: ${resultado.reinicios}; tiempo: ${resultado.tiempoEjecucionMs.toFixed(3)} ms.`;
+        } else {
+            mensaje.textContent = `Se evaluaron ${resultado.tamanoPoblacion} individuos durante ${resultado.generaciones} generaciones.`;
+        }
     }
 }
 
@@ -530,8 +610,13 @@ function ejecutarOptimizador() {
             datos
         );
 
+    } else if (datos.modalidad === "manual") {
+        if (typeof generarRutinaHillClimbing !== "function") {
+            if (mensajeError) mensajeError.textContent = "Falta cargar js/hill-climbing.js.";
+            return;
+        }
+        resultado = generarRutinaHillClimbing(datos);
     } else {
-
         resultado = generarRutina(datos);
     }
 
@@ -589,7 +674,9 @@ document.getElementById("regenerateBtn")?.addEventListener(
             return;
         }
 
-        const resultado = generarRutina(ultimosDatos);
+        const resultado = ultimosDatos.modalidad === "manual"
+            ? generarRutinaHillClimbing(ultimosDatos)
+            : generarRutina(ultimosDatos);
 
         if (resultado.error) {
 

@@ -10,3 +10,34 @@ button,input,select{font:inherit}.app-shell{max-width:1200px;margin:auto;padding
 .app-footer{height:65px;border-top:1px solid rgba(145,160,180,.13);display:flex;align-items:center;justify-content:space-between;color:#637287;font-size:9px;letter-spacing:1.3px;font-weight:700}
 @media(max-width:800px){.app-shell{padding:0 25px}.hero-screen{grid-template-columns:1fr;gap:15px;padding-top:65px}.hero-visual{height:350px;grid-row:1}.hero-copy{grid-row:2}.hero-screen{padding-bottom:100px}.hero-footer{bottom:25px}.chip-top{left:5%}.chip-bottom{right:4%}.result-layout{grid-template-columns:1fr}.result-aside{grid-template-columns:1fr 1fr}.content-screen{padding-top:30px}}
 @media(max-width:560px){.app-shell{padding:0 17px}.topbar{height:68px}.topbar-tag{font-size:8px;letter-spacing:.8px}.brand{font-size:17px}.hero-screen{padding-top:28px;gap:0}.hero-visual{height:300px;transform:scale(.9);margin:-8px -15px 0}.visual-ring{width:260px;height:260px}.visual-card-main{width:245px;padding:20px}.visual-number{font-size:57px;margin-top:25px}.chip-top{left:0;top:35px}.chip-bottom{right:0;bottom:30px}.floating-chip{padding:9px}.hero-copy h1{font-size:52px;letter-spacing:-2.8px}.hero-description{font-size:14px}.hero-footer{font-size:7px}.section-heading h2{font-size:27px}.setup-grid{grid-template-columns:1fr}.fatigue-card{grid-column:auto}.fatigue-grid{gap:18px 14px}.form-actions{align-items:flex-start;flex-direction:column;gap:13px}.form-actions .btn{width:100%;justify-content:center}.result-summary{grid-template-columns:1fr 1fr}.summary-tile:last-child{grid-column:1/-1}.summary-tile{padding:14px}.summary-tile strong{font-size:23px}.result-aside{grid-template-columns:1fr}.result-actions{flex-direction:column-reverse}.result-actions .btn{width:100%;justify-content:center}.app-footer{font-size:7px}.result-main,.score-card,.method-card{padding:17px}}
+/* ===== Fase 5: comparación Genético vs Hill Climbing ===== */
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+.hero-actions .btn-secondary{border-radius:12px}
+.compare-controls{display:grid;grid-template-columns:minmax(0,320px) auto 1fr;align-items:end;gap:16px;margin-bottom:18px}
+.compare-controls .field-hint{margin:0;align-self:center}
+#runCompareBtn:disabled{opacity:.55;cursor:wait}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.compare-table{width:100%;border-collapse:collapse;font-size:12px;min-width:980px}
+.compare-table th{font-size:9px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-weight:700}
+.compare-table td{padding:11px 10px;border-bottom:1px solid rgba(38,53,72,.6);vertical-align:top;font-variant-numeric:tabular-nums}
+.compare-table tr:last-child td{border-bottom:0}
+.compare-table td small{display:block;color:var(--muted);font-size:10px;margin-top:3px;max-width:220px}
+.algo-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.metric-table{width:100%;border-collapse:collapse;font-size:11px;margin:10px 0 14px;font-variant-numeric:tabular-nums}
+.metric-table th{font-size:8px;letter-spacing:1px;color:var(--muted);text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);text-transform:uppercase}
+.metric-table td{padding:7px 4px;border-bottom:1px solid rgba(38,53,72,.6)}
+.metric-table tr.is-best td{color:var(--green);font-weight:700}
+.chart-grid-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:18px}
+.chart-card{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.chart-card figcaption{font:600 15px var(--display);margin-bottom:8px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--muted);margin-bottom:6px}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chart-card svg{width:100%;height:auto;display:block}
+.chart-grid{stroke:#263548;stroke-width:1}
+.chart-axis{fill:#637287;font-size:10px;text-anchor:end}
+.chart-label{fill:var(--text);font-size:12px;font-weight:700;text-anchor:middle}
+.chart-sublabel{fill:#637287;font-size:10px;text-anchor:middle}
+.chart-value{fill:var(--text);font-size:10px;text-anchor:middle;font-weight:600}
+@media(max-width:800px){.compare-controls{grid-template-columns:1fr}}
+@media(max-width:560px){.hero-actions .btn{width:100%;justify-content:center}}
+.compare-controls .btn{padding:14px 18px;border-radius:12px}

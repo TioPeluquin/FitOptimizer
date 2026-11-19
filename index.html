@@ -15,6 +15,24 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        /* Estilos adicionales para la construcción manual. */
+        .manual-exercises { display:grid; gap:10px; margin-top:16px; }
+        .manual-exercise { display:flex; align-items:center; gap:12px;
+            border:1px solid rgba(130,160,170,.22); border-radius:12px;
+            padding:12px 14px; cursor:pointer; }
+        .manual-exercise:hover { border-color:#2cbd8d; }
+        .manual-exercise input { width:18px; height:18px; accent-color:#32ca96; flex-shrink:0; }
+        .manual-exercise-info { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
+        .manual-exercise-info small { opacity:.75; line-height:1.35; }
+        .manual-exercise-time { font-size:.84rem; white-space:nowrap; opacity:.85; }
+        .manual-summary { margin-top:12px; padding:12px 14px; border-radius:10px;
+            background:rgba(57,192,145,.1); font-size:.9rem; }
+        .manual-summary.warning { background:rgba(244,128,89,.12); color:#ffb38e; }
+        .exercise-item.manual-added { border-color:rgba(57,192,145,.5); }
+        .exercise-flag { font-size:.72rem; color:#49d5a0; font-weight:700; }
+        @media(min-width:600px) { .manual-exercises { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    </style>
 </head>
 
 <body>
@@ -505,21 +523,38 @@
                     <select id="modalidadEntrenamiento" name="modalidad">
 
                         <option value="personalizada">
-                            Crear rutina personalizada
+                            Crear mi rutina automáticamente
+                        </option>
+
+                        <option value="manual">
+                            Construir mi propia rutina
                         </option>
 
                         <option value="predefinida">
-                            Elegir rutina predefinida
+                            Explorar rutinas disponibles
                         </option>
 
                     </select>
 
 
                     <p class="field-hint">
-                        Puedes generar una rutina mediante el algoritmo genético
-                        o seleccionar una de las rutinas disponibles.
+                        Deja que FitOptimizer cree tu rutina, construye una
+                        con tus ejercicios favoritos o explora el catálogo.
                     </p>
 
+
+                    <!-- CONSTRUCCIÓN MANUAL: HILL CLIMBING -->
+                    <div class="form-group" id="grupoManual" style="display:none;">
+                        <label>Selecciona los ejercicios que quieres mantener</label>
+                        <p class="field-hint">
+                            Marcamos tus ejercicios como obligatorios y buscamos
+                            complementos que mejoren la rutina sin eliminarlos.
+                        </p>
+                        <div id="listaEjerciciosManual" class="manual-exercises"></div>
+                        <div id="resumenManual" class="manual-summary" aria-live="polite"></div>
+                        <p class="field-hint">Solo aparecen ejercicios compatibles con
+                            tu nivel, equipamiento y fatiga.</p>
+                    </div>
 
                     <!-- SELECTOR DE RUTINAS -->
 
@@ -706,7 +741,7 @@
                         </p>
 
                         <span class="method-tag">
-                            VERSIÓN INICIAL
+                            VERSIÓN COMPARATIVA
                         </span>
 
                     </div>
@@ -753,7 +788,7 @@
 
         <span>FITOPTIMIZER</span>
 
-        <span>PROTOTIPO ACADÉMICO · FASE 3</span>
+        <span>PROTOTIPO ACADÉMICO · LABORATORIO 9</span>
 
     </footer>
 
@@ -766,6 +801,7 @@
 
 <script src="js/ejercicios.js"></script>
 <script src="js/algoritmo.js"></script>
+<script src="js/hill-climbing.js"></script>
 <script src="js/app.js"></script>
 
 </body>
