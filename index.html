@@ -1,0 +1,818 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="FitOptimizer: genera rutinas de entrenamiento según tu tiempo, objetivo y equipamiento.">
+
+    <title>FitOptimizer | Tu entrenamiento optimizado</title>
+
+    <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <meta name="theme-color" content="#080d16">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        /* Estilos adicionales para la construcción manual. */
+        .manual-exercises { display:grid; gap:10px; margin-top:16px; }
+        .manual-exercise { display:flex; align-items:center; gap:12px;
+            border:1px solid rgba(130,160,170,.22); border-radius:12px;
+            padding:12px 14px; cursor:pointer; }
+        .manual-exercise:hover { border-color:#2cbd8d; }
+        .manual-exercise input { width:18px; height:18px; accent-color:#32ca96; flex-shrink:0; }
+        .manual-exercise-info { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
+        .manual-exercise-info small { opacity:.75; line-height:1.35; }
+        .manual-exercise-time { font-size:.84rem; white-space:nowrap; opacity:.85; }
+        .manual-summary { margin-top:12px; padding:12px 14px; border-radius:10px;
+            background:rgba(57,192,145,.1); font-size:.9rem; }
+        .manual-summary.warning { background:rgba(244,128,89,.12); color:#ffb38e; }
+        .exercise-item.manual-added { border-color:rgba(57,192,145,.5); }
+        .exercise-flag { font-size:.72rem; color:#49d5a0; font-weight:700; }
+        @media(min-width:600px) { .manual-exercises { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    </style>
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- ==========================================
+         ENCABEZADO
+    =========================================== -->
+
+    <header class="topbar">
+
+        <a class="brand" href="#" id="brandHome" aria-label="Ir al inicio">
+            <svg class="brand-mark" width="32" height="32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#0f1a28"/><polyline points="22,54 44,40 62,48 92,26" fill="none" stroke="#b7f36b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="92" cy="26" r="9" fill="#b7f36b"/><g fill="#f2f6fb"><rect x="22" y="66" width="12" height="30" rx="4"/><rect x="86" y="66" width="12" height="30" rx="4"/><rect x="34" y="77" width="52" height="8" rx="3"/></g></svg>
+            <span>Fit<span class="brand-accent">Optimizer</span></span>
+        </a>
+
+        <span class="topbar-tag">
+            <span class="status-dot"></span>
+            ENTRENAMIENTO INTELIGENTE
+        </span>
+
+    </header>
+
+
+    <main>
+
+        <!-- ==========================================
+             PANTALLA DE INICIO
+        =========================================== -->
+
+        <section id="homeScreen" class="screen hero-screen active">
+
+            <div class="hero-copy">
+
+                <div class="eyebrow">
+                    <span class="eyebrow-line"></span>
+                    ENTRENA CON INTENCIÓN
+                </div>
+
+                <h1>
+                    Tu tiempo.<br>
+                    Tu objetivo.<br>
+                    <span class="gradient-text">Tu mejor rutina.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Crea una rutina de entrenamiento adaptada a tu tiempo disponible,
+                    equipamiento, nivel de experiencia y estado muscular.
+                </p>
+
+                <button class="btn btn-primary btn-large" id="startBtn">
+                    Crear mi rutina <span aria-hidden="true">→</span>
+                </button>
+
+                <div class="hero-note">
+                    <span class="sparkle">✦</span>
+                    Rutinas personalizadas mediante optimización algorítmica
+                </div>
+
+            </div>
+
+
+            <div class="hero-visual" aria-label="Resumen ilustrativo de entrenamiento">
+
+                <div class="orb orb-one"></div>
+                <div class="orb orb-two"></div>
+
+                <div class="visual-card visual-card-main">
+
+                    <div class="visual-card-top">
+                        <span class="mini-label">FITOPTIMIZER / 01</span>
+                        <span class="live-pill">● ACTIVO</span>
+                    </div>
+
+                    <div class="visual-number">
+                        30<span> MIN</span>
+                    </div>
+
+                    <div class="visual-caption">
+                        Tu sesión, optimizada
+                    </div>
+
+                    <div class="progress-track">
+                        <div class="progress-fill"></div>
+                    </div>
+
+                    <div class="visual-bottom">
+                        <span>Tiempo disponible</span>
+                        <strong>100%</strong>
+                    </div>
+
+                </div>
+
+                <div class="floating-chip chip-top">
+                    <span class="chip-icon">↗</span>
+                    <span>
+                        <strong>Fitness</strong>
+                        <small>Evaluación de rutina</small>
+                    </span>
+                </div>
+
+                <div class="floating-chip chip-bottom">
+                    <span class="chip-icon green">✓</span>
+                    <span>
+                        <strong>Restricciones</strong>
+                        <small>Tiempo y recuperación</small>
+                    </span>
+                </div>
+
+                <div class="visual-ring"></div>
+
+            </div>
+
+
+            <div class="hero-footer">
+                <span>01 — PLANIFICA</span>
+                <span>02 — OPTIMIZA</span>
+                <span>03 — ENTRENA</span>
+            </div>
+
+        </section>
+
+
+
+        <!-- ==========================================
+             CONFIGURACIÓN DEL ENTRENAMIENTO
+        =========================================== -->
+
+        <section id="setupScreen" class="screen content-screen">
+
+            <div class="section-heading">
+
+                <button class="back-button" id="backHome" type="button" aria-label="Volver">
+                    ←
+                </button>
+
+                <div>
+                    <div class="eyebrow" id="wizardEyebrow">CONFIGURACIÓN / PASO 1 DE 4</div>
+                    <h2 id="wizardTitle">Tu sesión</h2>
+                    <p id="wizardSubtitle">Define el tiempo, el objetivo y tu nivel.</p>
+                </div>
+
+            </div>
+
+
+            <!-- ==================================
+                 INDICADOR DE PASOS
+            =================================== -->
+
+            <nav class="wizard-stepper" aria-label="Pasos de configuración">
+                <div class="wizard-progress"><div class="wizard-progress-fill" id="wizardProgress"></div></div>
+                <ol class="wizard-steps">
+                    <li><button type="button" class="wizard-step" data-goto="1"><span>01</span>Sesión</button></li>
+                    <li><button type="button" class="wizard-step" data-goto="2"><span>02</span>Equipamiento</button></li>
+                    <li><button type="button" class="wizard-step" data-goto="3"><span>03</span>Fatiga</button></li>
+                    <li><button type="button" class="wizard-step" data-goto="4"><span>04</span>Modalidad</button></li>
+                </ol>
+            </nav>
+
+
+            <form id="workoutForm" class="wizard-form" novalidate>
+
+
+                <!-- ==================================
+                     PASO 1. SESIÓN Y OBJETIVO
+                =================================== -->
+
+                <div class="setup-step form-card active" data-step="1"
+                     data-title="Tu sesión"
+                     data-subtitle="Define el tiempo, el objetivo y tu nivel.">
+
+                    <div class="card-heading">
+                        <span class="step-number">01</span>
+                        <div>
+                            <h3>Tiempo y objetivo</h3>
+                            <p>¿Cuánto tiempo tienes y qué quieres lograr?</p>
+                        </div>
+                    </div>
+
+                    <label for="availableTime">
+                        Tiempo disponible <span class="required">*</span>
+                    </label>
+
+                    <div class="input-with-unit">
+                        <input id="availableTime" type="number" min="1" max="240" value="30" inputmode="numeric" required>
+                        <span>MINUTOS</span>
+                    </div>
+
+                    <div class="time-presets" role="group" aria-label="Tiempos sugeridos">
+                        <button type="button" class="time-preset" data-minutes="15">15</button>
+                        <button type="button" class="time-preset" data-minutes="30">30</button>
+                        <button type="button" class="time-preset" data-minutes="45">45</button>
+                        <button type="button" class="time-preset" data-minutes="60">60</button>
+                    </div>
+
+                    <label for="objetivo">Objetivo de entrenamiento</label>
+
+                    <select id="objetivo" name="objetivo">
+                        <option value="hipertrofia">Hipertrofia muscular</option>
+                        <option value="fuerza">Fuerza</option>
+                        <option value="resistencia">Resistencia muscular</option>
+                        <option value="perdida_grasa">Pérdida de grasa</option>
+                        <option value="acondicionamiento">Acondicionamiento físico</option>
+                        <option value="movilidad">Movilidad y flexibilidad</option>
+                        <option value="calistenia">Calistenia</option>
+                    </select>
+
+                    <label for="nivel">Nivel de experiencia</label>
+
+                    <select id="nivel" name="nivel">
+                        <option value="principiante">Principiante</option>
+                        <option value="intermedio">Intermedio</option>
+                        <option value="avanzado">Avanzado</option>
+                    </select>
+
+                    <p class="field-hint">
+                        El objetivo define el beneficio de cada ejercicio y el nivel
+                        filtra los ejercicios que puedes realizar.
+                    </p>
+
+                </div>
+
+
+                <!-- ==================================
+                     PASO 2. EQUIPAMIENTO
+                =================================== -->
+
+                <div class="setup-step form-card" data-step="2"
+                     data-title="Equipamiento"
+                     data-subtitle="Selecciona lo que tienes disponible.">
+
+                    <div class="card-heading">
+                        <span class="step-number">02</span>
+                        <div>
+                            <h3>¿Con qué cuentas hoy?</h3>
+                            <p>Puedes no marcar nada: hay ejercicios con peso corporal.</p>
+                        </div>
+                    </div>
+
+                    <div class="equipment-option equipment-grid">
+
+                        <label class="check-row">
+                            <input type="checkbox" name="equipment" value="mancuernas">
+                            <span class="custom-check"></span>
+                            <span><strong>Mancuernas</strong><small>Pesos libres</small></span>
+                        </label>
+
+                        <label class="check-row">
+                            <input type="checkbox" name="equipment" value="bandas_elasticas">
+                            <span class="custom-check"></span>
+                            <span><strong>Bandas elásticas</strong><small>Bandas de resistencia</small></span>
+                        </label>
+
+                        <label class="check-row">
+                            <input type="checkbox" name="equipment" value="barra_dominadas">
+                            <span class="custom-check"></span>
+                            <span><strong>Barra de dominadas</strong><small>Barra fija</small></span>
+                        </label>
+
+                        <label class="check-row">
+                            <input type="checkbox" name="equipment" value="paralelas">
+                            <span class="custom-check"></span>
+                            <span><strong>Paralelas</strong><small>Entrenamiento de calistenia</small></span>
+                        </label>
+
+                        <label class="check-row">
+                            <input type="checkbox" name="equipment" value="anillas">
+                            <span class="custom-check"></span>
+                            <span><strong>Anillas</strong><small>Entrenamiento de suspensión</small></span>
+                        </label>
+
+                        <label class="check-row">
+                            <input type="checkbox" name="equipment" value="banco">
+                            <span class="custom-check"></span>
+                            <span><strong>Banco</strong><small>Superficie de apoyo</small></span>
+                        </label>
+
+                    </div>
+
+                    <p class="field-hint">
+                        Los ejercicios con peso corporal no necesitan equipamiento adicional.
+                    </p>
+
+                </div>
+
+
+                <!-- ==================================
+                     PASO 3. FATIGA MUSCULAR
+                =================================== -->
+
+                <div class="setup-step form-card" data-step="3"
+                     data-title="Fatiga previa"
+                     data-subtitle="Indica cómo se encuentra cada grupo muscular (0 a 10).">
+
+                    <div class="card-heading">
+                        <span class="step-number">03</span>
+                        <div>
+                            <h3>¿Cómo está tu cuerpo?</h3>
+                            <p>0 = descansado · 10 = muy fatigado.</p>
+                        </div>
+                    </div>
+
+                    <div class="fatigue-grid">
+
+                        <label for="fatigaPiernas">Piernas <output id="valorPiernas">0</output>
+                            <input id="fatigaPiernas" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaGluteos">Glúteos <output id="valorGluteos">0</output>
+                            <input id="fatigaGluteos" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaPantorrillas">Pantorrillas <output id="valorPantorrillas">0</output>
+                            <input id="fatigaPantorrillas" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaPecho">Pecho <output id="valorPecho">0</output>
+                            <input id="fatigaPecho" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaEspalda">Espalda <output id="valorEspalda">0</output>
+                            <input id="fatigaEspalda" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaHombros">Hombros <output id="valorHombros">0</output>
+                            <input id="fatigaHombros" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaBiceps">Bíceps <output id="valorBiceps">0</output>
+                            <input id="fatigaBiceps" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaTriceps">Tríceps <output id="valorTriceps">0</output>
+                            <input id="fatigaTriceps" type="range" min="0" max="10" value="0"></label>
+
+                        <label for="fatigaAbdomen">Abdomen / Core <output id="valorAbdomen">0</output>
+                            <input id="fatigaAbdomen" type="range" min="0" max="10" value="0"></label>
+
+                    </div>
+
+                    <p class="field-hint">
+                        Los ejercicios que trabajen un grupo con fatiga superior a 7
+                        se excluirán de la selección.
+                    </p>
+
+                </div>
+
+
+                <!-- ==================================
+                     PASO 4. MODALIDAD DE ENTRENAMIENTO
+                =================================== -->
+
+                <div class="setup-step form-card" data-step="4"
+                     data-title="Tipo de entrenamiento"
+                     data-subtitle="Elige cómo quieres obtener tu rutina.">
+
+                    <div class="card-heading">
+                        <span class="step-number">04</span>
+                        <div>
+                            <h3>Modalidad</h3>
+                            <p>Revisa tu configuración y elige el método.</p>
+                        </div>
+                    </div>
+
+                    <!-- Resumen de los pasos anteriores -->
+                    <div id="resumenConfiguracion" class="config-summary"></div>
+
+                    <label for="modalidadEntrenamiento">Modalidad de entrenamiento</label>
+
+                    <select id="modalidadEntrenamiento" name="modalidad">
+                        <option value="personalizada">Automática · algoritmo genético</option>
+                        <option value="manual">Construir la mía · hill climbing</option>
+                        <option value="predefinida">Catálogo de rutinas</option>
+                    </select>
+
+                    <p class="field-hint">
+                        Deja que FitOptimizer cree tu rutina, construye una
+                        con tus ejercicios favoritos o explora el catálogo.
+                    </p>
+
+                    <!-- ESTIRAMIENTO FINAL OPCIONAL -->
+                    <div class="equipment-option session-option">
+                        <label class="check-row">
+                            <input type="checkbox" id="incluirEstiramiento" checked>
+                            <span class="custom-check"></span>
+                            <span>
+                                <strong>Incluir estiramiento final</strong>
+                                <small>Opcional, al terminar la rutina.</small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <p id="desgloseTiempo" class="session-breakdown" aria-live="polite"></p>
+
+                    <!-- CONSTRUCCIÓN MANUAL: HILL CLIMBING -->
+                    <div class="form-group" id="grupoManual" style="display:none;">
+                        <label>Selecciona los ejercicios que quieres mantener</label>
+                        <p class="field-hint">
+                            Marcamos tus ejercicios como obligatorios y buscamos
+                            complementos que mejoren la rutina sin eliminarlos.
+                        </p>
+                        <div id="listaEjerciciosManual" class="manual-exercises"></div>
+                        <div id="resumenManual" class="manual-summary" aria-live="polite"></div>
+                        <p class="field-hint">Solo aparecen ejercicios compatibles con
+                            tu nivel, equipamiento y fatiga.</p>
+                    </div>
+
+                    <!-- SELECTOR DE RUTINAS -->
+                    <div class="form-group" id="grupoRutinas" style="display:none;">
+                        <label for="rutinaSeleccionada">Selecciona una rutina</label>
+                        <select id="rutinaSeleccionada" name="rutinaSeleccionada">
+                            <option value="">Selecciona una rutina</option>
+                        </select>
+                        <p class="field-hint">
+                            El catálogo contiene 12 rutinas de distintos
+                            niveles y grupos musculares.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <p id="formError" class="form-error" role="alert"></p>
+
+
+                <!-- ==================================
+                     NAVEGACIÓN ENTRE PASOS
+                =================================== -->
+
+                <div class="wizard-nav">
+
+                    <button class="btn btn-secondary" type="button" id="prevStepBtn">
+                        ← Atrás
+                    </button>
+
+                    <span class="wizard-available" id="ejerciciosCompatibles" aria-live="polite"></span>
+
+                    <button class="btn btn-primary" type="button" id="nextStepBtn">
+                        Siguiente <span aria-hidden="true">→</span>
+                    </button>
+
+                    <button class="btn btn-primary" type="submit" id="submitBtn" hidden>
+                        Generar rutina <span aria-hidden="true">→</span>
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+
+        <!-- ==========================================
+             PREPARA TU CUERPO
+        =========================================== -->
+
+        <section id="warmupScreen" class="screen content-screen">
+
+            <div class="section-heading">
+
+                <button class="back-button" id="backFromWarmup" type="button" aria-label="Volver">
+                    ←
+                </button>
+
+                <div>
+                    <div class="eyebrow">CALENTAMIENTO / 02</div>
+                    <h2>Prepara tu cuerpo</h2>
+                    <p id="warmupSubtitle">Calentamiento dinámico antes de tu rutina.</p>
+                </div>
+
+            </div>
+
+            <div class="guide-layout">
+
+                <div class="guide-player" aria-live="polite">
+
+                    <span class="eyebrow" id="warmupPhase">FASE</span>
+
+                    <h3 id="warmupCurrent">—</h3>
+
+                    <p id="warmupCurrentDesc" class="guide-desc"></p>
+
+                    <div id="warmupClock" class="guide-clock">00:00</div>
+
+                    <div class="progress-track">
+                        <div class="progress-fill guide-bar" id="warmupBar"></div>
+                    </div>
+
+                    <div class="guide-controls">
+                        <button class="btn btn-secondary" type="button" id="warmupReset" aria-label="Reiniciar">↺</button>
+                        <button class="btn btn-primary" type="button" id="warmupToggle">Iniciar ▶</button>
+                        <button class="btn btn-secondary" type="button" id="warmupNext">Siguiente ⏭</button>
+                    </div>
+
+                </div>
+
+                <div class="guide-list-card">
+
+                    <div class="result-section-title">
+                        <div>
+                            <span class="eyebrow">SECUENCIA</span>
+                            <h3>Calentamiento dinámico</h3>
+                        </div>
+                        <span id="warmupTotal" class="count-pill">0 MIN</span>
+                    </div>
+
+                    <ol id="warmupList" class="guide-list"></ol>
+
+                    <p class="guide-why"><strong>¿Por qué dinámico?</strong> El calentamiento con movimientos activos y de intensidad progresiva mejora el rendimiento. Los estiramientos estáticos largos (más de 60 s por músculo) justo antes de entrenar pueden reducir la fuerza, por eso los dejamos para el final.</p>
+
+                </div>
+
+            </div>
+
+            <div class="result-actions">
+                <button class="btn btn-secondary" type="button" id="skipWarmupBtn">
+                    Saltar calentamiento
+                </button>
+
+                <button class="btn btn-primary" type="button" id="toRoutineBtn">
+                    Ir a mi rutina →
+                </button>
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================
+             RESULTADOS
+        =========================================== -->
+
+        <section id="resultScreen" class="screen content-screen">
+
+            <div class="section-heading result-heading">
+
+                <button
+                    class="back-button"
+                    id="backSetup"
+                    aria-label="Volver a configuración"
+                >
+                    ←
+                </button>
+
+                <div>
+
+                    <div class="eyebrow">PLAN DE ENTRENAMIENTO / 03</div>
+
+                    <h2>Tu rutina optimizada</h2>
+
+                    <p>
+                        Esta es la rutina seleccionada según tus condiciones.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- RESUMEN -->
+
+            <div id="resultSummary" class="result-summary"></div>
+
+
+            <!-- INFORMACIÓN DE LA RUTINA -->
+
+            <div class="result-layout">
+
+
+                <div class="result-main">
+
+                    <div class="result-section-title">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                PLAN DE ENTRENAMIENTO
+                            </span>
+
+                            <h3 id="nombreRutinaResultado">
+                                Ejercicios seleccionados
+                            </h3>
+
+                        </div>
+
+                        <span id="exerciseCount" class="count-pill">
+                            0 EJERCICIOS
+                        </span>
+
+                    </div>
+
+
+                    <div id="modalidadResultado" class="field-hint"></div>
+
+                    <div id="objetivoResultado" class="field-hint"></div>
+
+
+                    <div id="exerciseList" class="exercise-list"></div>
+
+                </div>
+
+
+
+                <!-- INFORMACIÓN DEL ALGORITMO -->
+
+                <aside class="result-aside">
+
+
+                    <div class="score-card">
+
+                        <span class="eyebrow">
+                            FITNESS / PUNTAJE
+                        </span>
+
+                        <div id="fitnessScore" class="score-value">
+                            0
+                        </div>
+
+                        <p>
+                            Valor de idoneidad de la rutina
+                        </p>
+
+                        <div class="score-divider"></div>
+
+                        <div id="constraintStatus" class="constraint-status"></div>
+
+                    </div>
+
+
+
+                    <div class="method-card">
+
+                        <span class="eyebrow">
+                            MÉTODO UTILIZADO
+                        </span>
+
+                        <h3>Optimización de entrenamiento</h3>
+
+                        <p>
+                            <span id="resultMessage">
+                                Selección de ejercicios según tus condiciones.
+                            </span>
+                        </p>
+
+                        <span class="method-tag">
+                            VERSIÓN COMPARATIVA
+                        </span>
+
+                    </div>
+
+
+                </aside>
+
+            </div>
+
+
+
+            <!-- BOTONES DE RESULTADOS -->
+
+            <div class="result-actions">
+
+                <button
+                    class="btn btn-secondary"
+                    id="editBtn"
+                >
+                    ← Modificar parámetros
+                </button>
+
+                <button class="btn btn-primary" type="button" id="toStretchBtn">
+                    Estiramiento final →
+                </button>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- ==========================================
+             ESTIRAMIENTO FINAL
+        =========================================== -->
+
+        <section id="stretchScreen" class="screen content-screen">
+
+            <div class="section-heading">
+
+                <button class="back-button" id="backFromStretch" type="button" aria-label="Volver">
+                    ←
+                </button>
+
+                <div>
+                    <div class="eyebrow">ESTIRAMIENTO / 04</div>
+                    <h2>Estiramiento final</h2>
+                    <p id="stretchSubtitle">Estiramientos suaves de los músculos que trabajaste.</p>
+                </div>
+
+            </div>
+
+            <div class="guide-layout">
+
+                <div class="guide-player" aria-live="polite">
+
+                    <span class="eyebrow" id="stretchPhase">FASE</span>
+
+                    <h3 id="stretchCurrent">—</h3>
+
+                    <p id="stretchCurrentDesc" class="guide-desc"></p>
+
+                    <div id="stretchClock" class="guide-clock">00:00</div>
+
+                    <div class="progress-track">
+                        <div class="progress-fill guide-bar" id="stretchBar"></div>
+                    </div>
+
+                    <div class="guide-controls">
+                        <button class="btn btn-secondary" type="button" id="stretchReset" aria-label="Reiniciar">↺</button>
+                        <button class="btn btn-primary" type="button" id="stretchToggle">Iniciar ▶</button>
+                        <button class="btn btn-secondary" type="button" id="stretchNext">Siguiente ⏭</button>
+                    </div>
+
+                </div>
+
+                <div class="guide-list-card">
+
+                    <div class="result-section-title">
+                        <div>
+                            <span class="eyebrow">SECUENCIA</span>
+                            <h3>Vuelta a la calma</h3>
+                        </div>
+                        <span id="stretchTotal" class="count-pill">0 MIN</span>
+                    </div>
+
+                    <ol id="stretchList" class="guide-list"></ol>
+
+                    <p class="guide-why"><strong>Opcional.</strong> Estirar después de entrenar no evita el dolor muscular del día siguiente, pero hacerlo con regularidad mejora la flexibilidad. Estira hasta sentir tensión, nunca dolor.</p>
+
+                </div>
+
+            </div>
+
+            <div class="result-actions">
+                <button class="btn btn-secondary" type="button" id="backToRoutineBtn">
+                    ← Volver a la rutina
+                </button>
+
+                <button class="btn btn-primary" type="button" id="finishSessionBtn">
+                    Finalizar sesión ✓
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- ==========================================
+         PIE DE PÁGINA
+    =========================================== -->
+
+    <footer class="app-footer">
+
+        <span>FITOPTIMIZER</span>
+
+        <span>PROTOTIPO ACADÉMICO · LABORATORIO 9</span>
+
+    </footer>
+
+</div>
+
+
+<!-- ==========================================
+     ARCHIVOS JAVASCRIPT
+=========================================== -->
+
+<script src="js/ejercicios.js"></script>
+<script src="js/algoritmo.js"></script>
+<script src="js/hill-climbing.js"></script>
+<script src="js/calentamiento.js"></script>
+<script src="js/iconos.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
