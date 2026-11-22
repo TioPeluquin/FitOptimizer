@@ -20,24 +20,6 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/estilos.css">
-    <style>
-        /* Estilos adicionales para la construcción manual. */
-        .manual-exercises { display:grid; gap:10px; margin-top:16px; }
-        .manual-exercise { display:flex; align-items:center; gap:12px;
-            border:1px solid rgba(130,160,170,.22); border-radius:12px;
-            padding:12px 14px; cursor:pointer; }
-        .manual-exercise:hover { border-color:#2cbd8d; }
-        .manual-exercise input { width:18px; height:18px; accent-color:#32ca96; flex-shrink:0; }
-        .manual-exercise-info { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
-        .manual-exercise-info small { opacity:.75; line-height:1.35; }
-        .manual-exercise-time { font-size:.84rem; white-space:nowrap; opacity:.85; }
-        .manual-summary { margin-top:12px; padding:12px 14px; border-radius:10px;
-            background:rgba(57,192,145,.1); font-size:.9rem; }
-        .manual-summary.warning { background:rgba(244,128,89,.12); color:#ffb38e; }
-        .exercise-item.manual-added { border-color:rgba(57,192,145,.5); }
-        .exercise-flag { font-size:.72rem; color:#49d5a0; font-weight:700; }
-        @media(min-width:600px) { .manual-exercises { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    </style>
 </head>
 
 <body>
@@ -95,7 +77,7 @@
 
                 <div class="hero-note">
                     <span class="sparkle">✦</span>
-                    Rutinas personalizadas mediante optimización algorítmica
+                    Rutinas personalizadas según tu tiempo, tu equipo y tu cuerpo
                 </div>
 
             </div>
@@ -135,7 +117,7 @@
                 <div class="floating-chip chip-top">
                     <span class="chip-icon">↗</span>
                     <span>
-                        <strong>Fitness</strong>
+                        <strong>Puntaje</strong>
                         <small>Evaluación de rutina</small>
                     </span>
                 </div>
@@ -392,7 +374,7 @@
                         <span class="step-number">04</span>
                         <div>
                             <h3>Modalidad</h3>
-                            <p>Revisa tu configuración y elige el método.</p>
+                            <p>Revisa tu configuración y elige cómo armar tu rutina.</p>
                         </div>
                     </div>
 
@@ -402,14 +384,14 @@
                     <label for="modalidadEntrenamiento">Modalidad de entrenamiento</label>
 
                     <select id="modalidadEntrenamiento" name="modalidad">
-                        <option value="personalizada">Automática · algoritmo genético</option>
-                        <option value="manual">Construir la mía · hill climbing</option>
+                        <option value="personalizada">Crear mi rutina automáticamente</option>
+                        <option value="enfocada">Enfocarme en un músculo</option>
                         <option value="predefinida">Catálogo de rutinas</option>
                     </select>
 
                     <p class="field-hint">
-                        Deja que FitOptimizer cree tu rutina, construye una
-                        con tus ejercicios favoritos o explora el catálogo.
+                        Deja que FitOptimizer cree tu rutina, enfócate en un
+                        músculo específico o explora el catálogo.
                     </p>
 
                     <!-- ESTIRAMIENTO FINAL OPCIONAL -->
@@ -426,17 +408,34 @@
 
                     <p id="desgloseTiempo" class="session-breakdown" aria-live="polite"></p>
 
-                    <!-- CONSTRUCCIÓN MANUAL: HILL CLIMBING -->
-                    <div class="form-group" id="grupoManual" style="display:none;">
-                        <label>Selecciona los ejercicios que quieres mantener</label>
-                        <p class="field-hint">
-                            Marcamos tus ejercicios como obligatorios y buscamos
-                            complementos que mejoren la rutina sin eliminarlos.
-                        </p>
-                        <div id="listaEjerciciosManual" class="manual-exercises"></div>
-                        <div id="resumenManual" class="manual-summary" aria-live="polite"></div>
-                        <p class="field-hint">Solo aparecen ejercicios compatibles con
-                            tu nivel, equipamiento y fatiga.</p>
+                    <!-- ENFOQUE MUSCULAR -->
+                    <div class="form-group" id="grupoEnfoque" style="display:none;">
+
+                        <fieldset class="focus-fieldset">
+                            <legend>1. ¿Qué zona quieres trabajar?</legend>
+                            <div class="zone-options">
+                                <label class="zone-option">
+                                    <input type="radio" name="zonaEnfoque" value="superior">
+                                    <span><strong>Tren superior</strong><small>Pecho, espalda, hombros y brazos</small></span>
+                                </label>
+                                <label class="zone-option">
+                                    <input type="radio" name="zonaEnfoque" value="inferior">
+                                    <span><strong>Tren inferior</strong><small>Piernas, glúteos y pantorrillas</small></span>
+                                </label>
+                                <label class="zone-option">
+                                    <input type="radio" name="zonaEnfoque" value="core">
+                                    <span><strong>Core</strong><small>Abdomen y estabilidad</small></span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="focus-fieldset" id="grupoMusculos" hidden>
+                            <legend>2. ¿Qué músculo quieres priorizar?</legend>
+                            <div id="listaMusculos" class="muscle-options"></div>
+                        </fieldset>
+
+                        <p id="resumenEnfoque" class="session-breakdown" aria-live="polite"></p>
+
                     </div>
 
                     <!-- SELECTOR DE RUTINAS -->
@@ -631,11 +630,13 @@
 
                     <div id="exerciseList" class="exercise-list"></div>
 
+                    <div id="enfoqueDetalle" class="focus-detail" hidden></div>
+
                 </div>
 
 
 
-                <!-- INFORMACIÓN DEL ALGORITMO -->
+                <!-- PUNTAJE DE LA RUTINA -->
 
                 <aside class="result-aside">
 
@@ -643,7 +644,7 @@
                     <div class="score-card">
 
                         <span class="eyebrow">
-                            FITNESS / PUNTAJE
+                            PUNTAJE DE TU RUTINA
                         </span>
 
                         <div id="fitnessScore" class="score-value">
@@ -651,7 +652,7 @@
                         </div>
 
                         <p>
-                            Valor de idoneidad de la rutina
+                            Qué tan bien se ajusta a tu objetivo, tu tiempo y tu recuperación
                         </p>
 
                         <div class="score-divider"></div>
@@ -660,27 +661,6 @@
 
                     </div>
 
-
-
-                    <div class="method-card">
-
-                        <span class="eyebrow">
-                            MÉTODO UTILIZADO
-                        </span>
-
-                        <h3>Optimización de entrenamiento</h3>
-
-                        <p>
-                            <span id="resultMessage">
-                                Selección de ejercicios según tus condiciones.
-                            </span>
-                        </p>
-
-                        <span class="method-tag">
-                            VERSIÓN COMPARATIVA
-                        </span>
-
-                    </div>
 
 
                 </aside>
@@ -808,7 +788,9 @@
 =========================================== -->
 
 <script src="js/ejercicios.js"></script>
+<script src="js/dosificacion.js"></script>
 <script src="js/algoritmo.js"></script>
+<script src="js/enfoque.js"></script>
 <script src="js/hill-climbing.js"></script>
 <script src="js/calentamiento.js"></script>
 <script src="js/iconos.js"></script>

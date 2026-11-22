@@ -138,3 +138,48 @@ button,input,select{font:inherit}.app-shell{max-width:1200px;margin:auto;padding
 .exercise-picto,.manual-picto{width:100%;height:100%;display:block}
 .picto-wrap{width:44px;height:44px;flex:none;border-radius:9px;background:#0b1420;border:1px solid #26384b;padding:2px;display:block}
 @media(max-width:560px){.exercise-picto-box{width:54px;height:54px}.exercise-item{gap:10px}.exercise-index{width:26px;height:26px;font-size:10px}}
+
+/* ===== Fase 9: enfoque muscular (hill climbing) ===== */
+.focus-fieldset{border:0;padding:0;margin:18px 0 0;min-width:0}
+.focus-fieldset legend{font-size:12px;font-weight:600;margin-bottom:10px;padding:0}
+.zone-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.muscle-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.zone-option,.muscle-option{position:relative;display:flex;gap:10px;align-items:flex-start;padding:13px;background:#0c1623;border:1px solid #26384b;border-radius:12px;cursor:pointer;transition:border-color .2s,background .2s}
+.zone-option input,.muscle-option input{margin:2px 0 0;accent-color:var(--green);width:16px;height:16px;flex:none}
+.zone-option strong,.muscle-option strong{display:block;font-size:12px}
+.zone-option small,.muscle-option small{display:block;font-size:10px;color:var(--muted);margin-top:3px;line-height:1.45}
+.zone-option:has(input:checked),.muscle-option:has(input:checked){border-color:var(--green);background:#132219}
+.zone-option:hover,.muscle-option:not(.is-disabled):hover{border-color:rgba(183,243,107,.5)}
+.muscle-option.is-disabled{opacity:.5;cursor:not-allowed}
+.muscle-count{color:var(--green)!important;font-weight:600}
+.muscle-option.is-disabled .muscle-count{color:var(--danger)!important}
+.exercise-flag{display:block;font-size:10px;color:var(--green);font-weight:700;margin-top:3px}
+.exercise-flag.is-neighbor{color:#8fb7e8}
+.focus-detail{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.focus-rows{display:grid;gap:12px}
+.focus-row-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:6px}
+.focus-row-head em{font-style:normal;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-left:6px}
+.focus-row-head strong{font:600 13px var(--display)}
+.focus-row-head small{font:500 10px var(--font);color:var(--muted)}
+.focus-track{position:relative;height:8px;border-radius:9px;background:#1c2a3b}
+.focus-fill{height:100%;border-radius:9px;background:var(--green)}
+.focus-row.is-vecino .focus-fill{background:#8fb7e8}
+.focus-row.is-otro .focus-fill{background:#6b7e95}
+.focus-limit{position:absolute;top:-3px;bottom:-3px;width:2px;background:#f2f6fb;border-radius:2px;transform:translateX(-1px)}
+.focus-formula{margin-top:12px;padding:12px 14px;border-radius:10px;background:#0b1420;border:1px solid #26384b;font-size:11px;color:var(--muted);line-height:1.8}
+.focus-formula b{color:var(--text);font-weight:700}
+.focus-formula b.is-total{color:var(--green)}
+.focus-note{font-size:11px;line-height:1.6;color:#ffd59e;background:rgba(255,190,90,.08);border:1px solid rgba(255,190,90,.3);border-radius:10px;padding:10px 12px;margin:10px 0 0}
+.compare-mini td.is-win{color:var(--green);font-weight:700}
+.compare-mini th:not(:first-child),.compare-mini td:not(:first-child){text-align:right}
+@media(max-width:560px){.zone-options{grid-template-columns:1fr}.muscle-options{grid-template-columns:1fr}}
+.result-section-title{gap:12px}
+.count-pill{white-space:nowrap;flex:none}
+
+/* ===== Fase 10: dosificación ===== */
+.dose-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dose-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:8px;background:#162231;border:1px solid #26384b;font-size:11px;color:#c9d4e2;line-height:1.3}
+.dose-chip b{color:var(--text);font-weight:700}
+.dose-chip.is-main{background:#132219;border-color:rgba(183,243,107,.35)}
+.dose-chip.is-main b{color:var(--green)}
+.exercise-info small.dose-effort{font-size:10px;color:#a5b3c5;margin-top:6px;line-height:1.5}

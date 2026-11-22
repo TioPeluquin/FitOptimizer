@@ -165,78 +165,127 @@ cargarRutinasPredefinidas();
 function actualizarModalidad() {
     const modalidad = document.getElementById("modalidadEntrenamiento")?.value || "personalizada";
     const rutinas = document.getElementById("grupoRutinas");
-    const manual = document.getElementById("grupoManual");
-    const algoritmoAntiguo = document.getElementById("grupoAlgoritmo");
+    const enfoque = document.getElementById("grupoEnfoque");
     if (rutinas) rutinas.style.display = modalidad === "predefinida" ? "block" : "none";
-    if (manual) manual.style.display = modalidad === "manual" ? "block" : "none";
-    if (algoritmoAntiguo) algoritmoAntiguo.style.display = "none";
-    if (modalidad === "manual") actualizarEjerciciosManuales();
+    if (enfoque) enfoque.style.display = modalidad === "enfocada" ? "block" : "none";
+    if (modalidad === "enfocada") actualizarMusculos();
 }
 
-// Mostrar ejercicios compatibles con las condiciones actuales.
-// Conservamos los checks al actualizar equipamiento, nivel o fatiga.
-function actualizarEjerciciosManuales() {
-    const contenedor = document.getElementById("listaEjerciciosManual");
-    if (!contenedor) return;
-    const anteriores = new Set([...contenedor.querySelectorAll('input[name="ejercicioManual"]:checked')]
-        .map(c => c.value));
-    const datos = obtenerDatosFormulario();
-    const disponibles = EJERCICIOS.filter(e => ejercicioDisponible(e, datos));
+
+// ==================================================
+// 5.1 ENFOQUE MUSCULAR: ZONA → MÚSCULO
+// ==================================================
+
+function zonaSeleccionada() {
+    return document.querySelector('input[name="zonaEnfoque"]:checked')?.value || "";
+}
+
+function musculoSeleccionado() {
+    return document.querySelector('input[name="musculoObjetivo"]:checked')?.value || "";
+}
+
+// Muestra los músculos de la zona elegida. Un músculo sin ejercicios
+// disponibles (por nivel, equipamiento o fatiga) aparece deshabilitado.
+function actualizarMusculos() {
+
+    const grupo = document.getElementById("grupoMusculos");
+    const contenedor = document.getElementById("listaMusculos");
+    if (!grupo || !contenedor) return;
+
+    const zona = zonaSeleccionada();
+    const previo = musculoSeleccionado();
+
+    grupo.hidden = !zona;
     contenedor.replaceChildren();
-    for (const ejercicio of disponibles) {
-        const etiqueta = document.createElement("label");
-        etiqueta.className = "manual-exercise";
-        const check = document.createElement("input");
-        check.type = "checkbox";
-        check.name = "ejercicioManual";
-        check.value = ejercicio.id;
-        check.checked = anteriores.has(ejercicio.id);
-        const info = document.createElement("span");
-        info.className = "manual-exercise-info";
-        const titulo = document.createElement("strong");
-        titulo.textContent = ejercicio.nombre;
-        const descripcion = document.createElement("small");
-        descripcion.textContent = `${ejercicio.grupoMuscular} · ${ejercicio.descripcion}`;
-        info.append(titulo, descripcion);
-        const tiempo = document.createElement("span");
-        tiempo.className = "manual-exercise-time";
-        tiempo.textContent = `${ejercicio.minutos} min`;
-        const dibujo = crearPictograma(ejercicio.id, "manual-picto");
-        etiqueta.append(check, dibujo, info, tiempo);
-        contenedor.appendChild(etiqueta);
+
+    if (zona) {
+        const datos = obtenerDatosFormulario();
+
+        ZONAS_ENFOQUE[zona].musculos.forEach(clave => {
+
+            const info = MUSCULOS_ENFOQUE[clave];
+            const disponibles = ejerciciosPrincipalesDe(clave, datos).length;
+
+            const etiqueta = document.createElement("label");
+            etiqueta.className = "muscle-option" + (disponibles ? "" : " is-disabled");
+
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "musculoObjetivo";
+            radio.value = clave;
+            radio.disabled = disponibles === 0;
+            radio.checked = previo === clave && disponibles > 0;
+
+            const texto = document.createElement("span");
+            const nombre = document.createElement("strong");
+            nombre.textContent = info.nombre;
+            const patron = document.createElement("small");
+            patron.textContent = info.vecinos.length
+                ? `${info.patron} · Apoyo: ${info.vecinos.map(nombreMusculo).join(", ").toLowerCase()}`
+                : info.patron;
+            const cantidad = document.createElement("small");
+            cantidad.className = "muscle-count";
+            cantidad.textContent = disponibles
+                ? `${disponibles} ejercicio${disponibles === 1 ? "" : "s"} disponible${disponibles === 1 ? "" : "s"}`
+                : "Sin ejercicios con tu nivel, equipo o fatiga";
+
+            texto.append(nombre, patron, cantidad);
+            etiqueta.append(radio, texto);
+            contenedor.appendChild(etiqueta);
+        });
     }
-    if (!disponibles.length) {
-        contenedor.textContent = "No hay ejercicios compatibles. Ajusta nivel, equipamiento o fatiga.";
-    }
-    actualizarResumenManual();
+
+    actualizarResumenEnfoque();
 }
 
-function actualizarResumenManual() {
-    const resumen = document.getElementById("resumenManual");
+function actualizarResumenEnfoque() {
+
+    const resumen = document.getElementById("resumenEnfoque");
     if (!resumen) return;
-    const ids = [...document.querySelectorAll('input[name="ejercicioManual"]:checked')].map(c => c.value);
-    const ejercicios = ids.map(id => EJERCICIOS.find(e => e.id === id)).filter(Boolean);
-    const tiempo = ejercicios.reduce((total, e) => total + e.minutos, 0);
-    // Minutos que quedan para ejercicios tras descontar calentamiento y estiramiento.
-    const tiempoMaximo = obtenerDatosFormulario().tiempoMaximo;
-    const sobrecarga = ejercicios.length && !esRutinaValida(ejercicios, tiempoMaximo);
-    resumen.classList.toggle("warning", Boolean(sobrecarga));
-    resumen.textContent = `${ids.length} ejercicio(s) seleccionado(s) · ${tiempo} de ${tiempoMaximo} minutos para ejercicios` +
-        (sobrecarga ? " · Revisa el tiempo o la carga muscular." : "");
+
+    const musculo = musculoSeleccionado();
+    const { tiempoMaximo } = obtenerDatosFormulario();
+
+    if (!zonaSeleccionada()) {
+        resumen.textContent = "Elige una zona para ver sus músculos.";
+        return;
+    }
+
+    if (!musculo) {
+        resumen.textContent = "Elige el músculo que quieres priorizar.";
+        return;
+    }
+
+    const info = MUSCULOS_ENFOQUE[musculo];
+    const vecinos = info.vecinos.map(nombreMusculo).join(" y ").toLowerCase();
+
+    resumen.innerHTML =
+        `Armaremos <strong>${tiempoMaximo} min</strong> de ejercicios ` +
+        `para priorizar <strong>${info.nombre.toLowerCase()}</strong>` +
+        (vecinos
+            ? `. ${vecinos.charAt(0).toUpperCase() + vecinos.slice(1)} trabajarán como apoyo, sin superar la mitad del trabajo principal.`
+            : ".");
 }
 
-for (const id of ["availableTime", "objetivo", "nivel", "fatigueLegs", "fatigueChest", "fatigueCore", "fatigueBack",
-    "fatigaPiernas", "fatigaPecho", "fatigaAbdomen", "fatigaEspalda", "fatigaHombros", "fatigaBiceps", "fatigaTriceps", "fatigaGluteos", "fatigaPantorrillas"]) {
+document.querySelectorAll('input[name="zonaEnfoque"]').forEach(radio =>
+    radio.addEventListener("change", actualizarMusculos)
+);
+
+document.getElementById("listaMusculos")?.addEventListener("change", actualizarResumenEnfoque);
+
+// Si cambian nivel, equipamiento o fatiga, se recalcula qué músculos tienen ejercicios.
+for (const id of ["availableTime", "nivel", "incluirEstiramiento", "fatigaPiernas", "fatigaPecho", "fatigaAbdomen",
+    "fatigaEspalda", "fatigaHombros", "fatigaBiceps", "fatigaTriceps", "fatigaGluteos", "fatigaPantorrillas"]) {
     document.getElementById(id)?.addEventListener("input", () => {
-        if (document.getElementById("modalidadEntrenamiento")?.value === "manual") actualizarEjerciciosManuales();
+        if (document.getElementById("modalidadEntrenamiento")?.value === "enfocada") actualizarMusculos();
     });
 }
+
 document.querySelectorAll('input[name="equipment"]').forEach(c =>
     c.addEventListener("change", () => {
-        if (document.getElementById("modalidadEntrenamiento")?.value === "manual") actualizarEjerciciosManuales();
+        if (document.getElementById("modalidadEntrenamiento")?.value === "enfocada") actualizarMusculos();
     })
 );
-document.getElementById("listaEjerciciosManual")?.addEventListener("change", actualizarResumenManual);
 
 document.getElementById("modalidadEntrenamiento")
     ?.addEventListener("change", actualizarModalidad);
@@ -348,8 +397,9 @@ function obtenerDatosFormulario() {
             document.getElementById("modalidadEntrenamiento")?.value ||
             "personalizada",
 
-        ejerciciosManuales: [...document.querySelectorAll('input[name="ejercicioManual"]:checked')]
-            .map(c => c.value),
+        zonaEnfoque: zonaSeleccionada(),
+
+        musculoObjetivo: musculoSeleccionado(),
 
         idRutina:
             document.getElementById("rutinaSeleccionada")?.value || ""
@@ -416,7 +466,7 @@ function validarFormulario(datos) {
     }
 
     if (
-        !["predefinida", "personalizada", "manual"].includes(datos.modalidad)
+        !["predefinida", "personalizada", "enfocada"].includes(datos.modalidad)
     ) {
         return "Selecciona una modalidad de entrenamiento.";
     }
@@ -428,14 +478,11 @@ function validarFormulario(datos) {
         return "Selecciona una rutina del catálogo.";
     }
 
-    if (datos.modalidad === "manual") {
-        if (!datos.ejerciciosManuales.length) return "Selecciona al menos un ejercicio.";
-        const seleccionados = datos.ejerciciosManuales.map(id => EJERCICIOS.find(e => e.id === id));
-        if (seleccionados.some(e => !e || !ejercicioDisponible(e, datos))) {
-            return "Revisa tus ejercicios: uno de ellos ya no está disponible.";
-        }
-        if (!esRutinaValida(seleccionados, datos.tiempoMaximo)) {
-            return "Tus ejercicios seleccionados superan el tiempo o la carga muscular permitida.";
+    if (datos.modalidad === "enfocada") {
+        if (!datos.zonaEnfoque) return "Elige la zona que quieres trabajar.";
+        if (!datos.musculoObjetivo) return "Elige el músculo que quieres priorizar.";
+        if (!ejerciciosPrincipalesDe(datos.musculoObjetivo, datos).length) {
+            return `No hay ejercicios de ${nombreMusculo(datos.musculoObjetivo).toLowerCase()} disponibles con tu nivel, equipamiento y fatiga.`;
         }
     }
 
@@ -487,18 +534,23 @@ function mostrarResultados(resultado, datos) {
 
             <div class="summary-tile">
                 <span>TIEMPO DE RUTINA</span>
-                <strong>${resultado.tiempoTotal} <em>min</em></strong>
+                <strong>${formatearNumero(resultado.tiempoTotal)} <em>min</em></strong>
             </div>
 
             <div class="summary-tile">
                 <span>SESIÓN COMPLETA</span>
-                <strong>${datos.tiempos.calentamiento + resultado.tiempoTotal + datos.tiempos.estiramiento} <em>de ${datos.tiempoSesion} min</em></strong>
+                <strong>${formatearNumero(datos.tiempos.calentamiento + resultado.tiempoTotal + datos.tiempos.estiramiento)} <em>de ${datos.tiempoSesion} min</em></strong>
             </div>
 
+            ${resultado.tipo === "enfocada" ? `
+            <div class="summary-tile">
+                <span>ESTÍMULO EN ${nombreMusculo(resultado.musculoObjetivo).toUpperCase()}</span>
+                <strong>${formatearNumero(resultado.volumenObjetivo)} <em>series efectivas</em></strong>
+            </div>` : `
             <div class="summary-tile">
                 <span>BENEFICIO ACUMULADO</span>
                 <strong>${resultado.beneficioTotal} <em>pts</em></strong>
-            </div>
+            </div>`}
 
         `;
     }
@@ -506,7 +558,7 @@ function mostrarResultados(resultado, datos) {
     const puntuacion = document.getElementById("fitnessScore");
 
     if (puntuacion) {
-        puntuacion.textContent = resultado.aptitud;
+        puntuacion.textContent = formatearNumero(resultado.aptitud, 2);
     }
 
     const cantidad = document.getElementById("exerciseCount");
@@ -531,7 +583,7 @@ function mostrarResultados(resultado, datos) {
     if (modalidadResultado) {
         modalidadResultado.textContent =
             resultado.tipo === "predefinida" ? "Rutina del catálogo" :
-            resultado.tipo === "manual" ? "Rutina construida y mejorada según tus elecciones" :
+            resultado.tipo === "enfocada" ? `Rutina enfocada en ${nombreMusculo(resultado.musculoObjetivo).toLowerCase()}` :
             "Rutina personalizada automáticamente";
     }
 
@@ -558,8 +610,15 @@ function mostrarResultados(resultado, datos) {
 
         } else {
 
+            const objetivoDosis = resultado.objetivo || datos.objetivo;
+
             lista.innerHTML = seleccionados.map(
-                (ejercicio, indice) => `
+                (ejercicio, indice) => {
+
+                    const dosis = dosificar(ejercicio, objetivoDosis, datos.nivel);
+                    const series = ejercicio.series ?? seriesParaMinutos(dosis, ejercicio.minutos);
+
+                    return `
 
                     <article class="exercise-item">
 
@@ -574,27 +633,31 @@ function mostrarResultados(resultado, datos) {
                         <div class="exercise-info">
 
                             <strong>${ejercicio.nombre}</strong>
-                            ${resultado.tipo === "manual" ?
-                                `<small class="exercise-flag">${resultado.ejerciciosOriginales.includes(ejercicio.id) ? "✓ Tu elección" : "+ Sugerido"}</small>` : ""}
+                            ${resultado.tipo === "enfocada" ?
+                                `<small class="exercise-flag ${ejercicio.rol === "objetivo" ? "" : "is-neighbor"}">${ejercicio.rol === "objetivo" ? "● Principal" : "○ Apoyo"}</small>` : ""}
 
                             <small>
-                                ${ejercicio.grupoMuscular}
+                                ${ejercicio.grupoMuscular} · ${ejercicio.descripcion}
                             </small>
 
-                            <small>
-                                ${ejercicio.descripcion}
-                            </small>
+                            <div class="dose-chips">
+                                <span class="dose-chip is-main"><b>${series}</b> ${series === 1 ? "serie" : "series"} × ${dosis.carga}</span>
+                                <span class="dose-chip">Descanso <b>${dosis.descansoTexto}</b></span>
+                            </div>
+
+                            <small class="dose-effort">${dosis.esfuerzo}. ${dosis.consejo}</small>
 
                         </div>
 
                         <div class="exercise-time">
-                            ${ejercicio.minutos}
+                            ${formatearNumero(ejercicio.minutos)}
                             <small>MIN</small>
                         </div>
 
                     </article>
 
-                `
+                `;
+                }
             ).join("");
         }
     }
@@ -612,23 +675,7 @@ function mostrarResultados(resultado, datos) {
         `;
     }
 
-    const mensaje = document.getElementById("resultMessage");
-
-    if (mensaje) {
-
-        if (resultado.tipo === "predefinida") {
-            mensaje.textContent = "Rutina seleccionada desde el catálogo de FitOptimizer.";
-        } else if (resultado.tipo === "manual") {
-            mensaje.textContent =
-                `Se conservaron ${resultado.ejerciciosOriginales.length} ejercicios elegidos por ti. ` +
-                `Se sugirieron ${resultado.ejerciciosAgregados.length} adicionales. ` +
-                `Mejora de fitness: +${resultado.mejoriaFitness}. ` +
-                `Evaluaciones: ${resultado.evaluaciones}; iteraciones: ${resultado.iteraciones}; ` +
-                `reinicios: ${resultado.reinicios}; tiempo: ${resultado.tiempoEjecucionMs.toFixed(3)} ms.`;
-        } else {
-            mensaje.textContent = `Se evaluaron ${resultado.tamanoPoblacion} individuos durante ${resultado.generaciones} generaciones.`;
-        }
-    }
+    mostrarDetalleEnfoque(resultado);
 }
 
 
@@ -668,12 +715,10 @@ function ejecutarOptimizador() {
             datos
         );
 
-    } else if (datos.modalidad === "manual") {
-        if (typeof generarRutinaHillClimbing !== "function") {
-            if (mensajeError) mensajeError.textContent = "Falta cargar js/hill-climbing.js.";
-            return;
-        }
+    } else if (datos.modalidad === "enfocada") {
+
         resultado = generarRutinaHillClimbing(datos);
+
     } else {
         resultado = generarRutina(datos);
     }
@@ -857,7 +902,7 @@ function irAPaso(paso, { desplazar = true } = {}) {
     if (botonSiguiente) botonSiguiente.hidden = esUltimo;
     if (botonGenerar) botonGenerar.hidden = !esUltimo;
 
-    // Al llegar al último paso se refrescan el resumen y la lista manual.
+    // Al llegar al último paso se refrescan el resumen y el enfoque.
     if (esUltimo) {
         actualizarResumenConfiguracion();
         actualizarModalidad();
@@ -944,6 +989,10 @@ function actualizarResumenConfiguracion() {
         }
     ];
 
+    if (datos.modalidad === "enfocada" && datos.musculoObjetivo) {
+        chips.push({ paso: 4, etiqueta: "Enfoque", valor: nombreMusculo(datos.musculoObjetivo) });
+    }
+
     contenedor.replaceChildren(
         ...chips.map(chip => {
             const boton = document.createElement("button");
@@ -1005,7 +1054,7 @@ const formularioEntrenamiento = document.getElementById("workoutForm");
         actualizarDesgloseTiempo();
         if (pasoActual === TOTAL_PASOS) {
             actualizarResumenConfiguracion();
-            actualizarResumenManual();
+            actualizarResumenEnfoque();
         }
     })
 );
@@ -1154,3 +1203,74 @@ document.querySelectorAll('input[name="equipment"]').forEach(entrada => {
         ?.querySelector(".custom-check")
         ?.after(icono);
 });
+
+
+// ==================================================
+// 17. DETALLE DEL ENFOQUE MUSCULAR
+// ==================================================
+
+function formatearNumero(valor, decimales = 1) {
+    return Number(valor).toLocaleString("es-CL", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimales
+    });
+}
+
+function mostrarDetalleEnfoque(resultado) {
+
+    const detalle = document.getElementById("enfoqueDetalle");
+    if (!detalle) return;
+
+    const esEnfocada = resultado.tipo === "enfocada";
+    detalle.hidden = !esEnfocada;
+    if (!esEnfocada) return;
+
+    const etiquetas = { objetivo: "principal", vecino: "apoyo", otro: "otro" };
+
+    const filas = resultado.distribucion
+        .filter(d => d.rol !== "otro" || d.volumen > 0)
+        .map(d => {
+            const ancho = Math.min(100, (d.volumen / d.capacidad) * 100);
+            const marca = d.limite !== null
+                ? `<i class="focus-limit" style="left:${Math.min(100, (d.limite / d.capacidad) * 100)}%" title="Máximo recomendado como apoyo"></i>`
+                : "";
+            return `
+                <div class="focus-row is-${d.rol}">
+                    <div class="focus-row-head">
+                        <span>${d.nombre} <em>${etiquetas[d.rol]}</em></span>
+                        <strong>${formatearNumero(d.volumen)} <small>/ ${formatearNumero(d.capacidad)}</small></strong>
+                    </div>
+                    <div class="focus-track"><div class="focus-fill" style="width:${ancho}%"></div>${marca}</div>
+                </div>`;
+        }).join("");
+
+    const avisos = [];
+    const musculo = nombreMusculo(resultado.musculoObjetivo).toLowerCase();
+
+    if (resultado.volumenObjetivo < 2) {
+        avisos.push(`Con tu nivel y equipamiento hay pocos ejercicios directos para ${musculo}, así que el trabajo será suave.`);
+    }
+
+    if (resultado.tiempoTotal < resultado.tiempoMaximo - 3) {
+        avisos.push(
+            `Tu rutina dura ${formatearNumero(resultado.tiempoTotal)} de ${resultado.tiempoMaximo} min: más series no ayudarían ` +
+            `más a ${musculo} y cargarían de más a los músculos de apoyo.`
+        );
+    }
+
+    detalle.innerHTML = `
+        <div class="result-section-title">
+            <div>
+                <span class="eyebrow">TRABAJO POR MÚSCULO</span>
+                <h3>¿Dónde se concentra tu rutina?</h3>
+            </div>
+            <span class="count-pill">${resultado.totalSeries} SERIES</span>
+        </div>
+        <div class="focus-rows">${filas}</div>
+        <p class="field-hint">
+            Cada barra muestra cuánto trabaja ese músculo frente al máximo útil para una sesión.
+            Los músculos de apoyo se mantienen por debajo de la línea blanca para no cansarse antes que el principal.
+        </p>
+        ${avisos.map(a => `<p class="focus-note">${a}</p>`).join("")}
+    `;
+}

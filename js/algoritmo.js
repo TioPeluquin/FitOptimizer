@@ -586,3 +586,82 @@ function generarRutina(datos) {
     };
 }
 
+
+
+// ==================================================
+// 18. ALGORITMO GENÉTICO ENFOCADO EN UN MÚSCULO
+// ==================================================
+//
+// Misma función fitness que hill climbing (js/enfoque.js), para
+// comparar ambas heurísticas en igualdad de condiciones.
+// Cromosoma entero: cada gen = series del ejercicio (0 a 4).
+
+const CONFIG_GENETICO_ENFOCADO = {
+    tamanoPoblacion: 30,
+    cantidadGeneraciones: 60,
+    probabilidadMutacion: 0.1,
+    cantidadElite: 2
+};
+
+function generarRutinaEnfocadaGenetica(datos) {
+
+    const inicio = performance.now();
+    const contexto = crearContextoEnfoque(datos);
+
+    if (contexto.error) return { error: contexto.error };
+
+    const n = contexto.candidatos.length;
+    const maximo = MODELO_ENFOQUE.maximoSeriesEjercicio;
+    const C = CONFIG_GENETICO_ENFOCADO;
+    let evaluaciones = 0;
+
+    function evaluar(cromosoma) {
+        evaluaciones++;
+        return evaluarEnfoque(repararEnfoque(cromosoma, contexto), contexto);
+    }
+
+    function mutar(cromosoma) {
+        return cromosoma.map(gen =>
+            Math.random() < C.probabilidadMutacion
+                ? gen + (Math.random() < 0.5 ? -1 : 1)
+                : gen
+        );
+    }
+
+    let poblacion = Array.from({ length: C.tamanoPoblacion - 1 }, () =>
+        evaluar(Array.from({ length: n }, () => Math.floor(Math.random() * 3)))
+    );
+    poblacion.push(evaluar(Array(n).fill(0)));
+
+    for (let generacion = 0; generacion < C.cantidadGeneraciones; generacion++) {
+
+        poblacion.sort((a, b) => b.aptitud - a.aptitud);
+
+        const nuevaPoblacion = poblacion.slice(0, C.cantidadElite);
+
+        while (nuevaPoblacion.length < C.tamanoPoblacion) {
+            const padreA = seleccionPorTorneo(poblacion);
+            const padreB = seleccionPorTorneo(poblacion);
+            const hijo = mutar(realizarCruce(padreA.series, padreB.series));
+            nuevaPoblacion.push(evaluar(hijo));
+        }
+
+        poblacion = nuevaPoblacion;
+    }
+
+    poblacion.sort((a, b) => b.aptitud - a.aptitud);
+    const mejor = poblacion[0];
+
+    if (!(mejor.volumen[contexto.objetivo] > 0)) {
+        return { error: "No fue posible crear una rutina para ese músculo." };
+    }
+
+    return construirResultadoEnfoque(mejor, contexto, {
+        algoritmo: "genetico",
+        nombreRutina: `Rutina enfocada: ${nombreMusculo(contexto.objetivo)}`,
+        evaluaciones,
+        generaciones: C.cantidadGeneraciones,
+        tamanoPoblacion: C.tamanoPoblacion,
+        tiempoEjecucionMs: performance.now() - inicio
+    });
+}
