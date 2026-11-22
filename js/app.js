@@ -956,7 +956,7 @@ function actualizarCompatibles() {
     const total = contarEjerciciosCompatibles();
     contador.classList.toggle("is-empty", total === 0);
     contador.innerHTML =
-        `<strong>${total}</strong> de ${EJERCICIOS.length} ejercicios compatibles`;
+        `<strong>${total}</strong> ${total === 1 ? "ejercicio disponible" : "ejercicios disponibles"} para ti`;
 }
 
 
@@ -983,11 +983,19 @@ function actualizarResumenConfiguracion() {
         { paso: 2, etiqueta: "Equipo", valor: equipos },
         {
             paso: 3,
-            etiqueta: "Excluidos",
+            etiqueta: "Con dolor",
             valor: fatigados.length ? fatigados.join(", ") : "Ninguno",
             aviso: fatigados.length > 0
         }
     ];
+
+    const cargados = Object.entries(datos.fatiga)
+        .filter(([, valor]) => valor >= 3 && valor <= 7)
+        .map(([grupo]) => NOMBRES_GRUPO[grupo] || grupo);
+
+    if (cargados.length) {
+        chips.push({ paso: 3, etiqueta: "Con menos carga", valor: cargados.join(", ") });
+    }
 
     if (datos.modalidad === "enfocada" && datos.musculoObjetivo) {
         chips.push({ paso: 4, etiqueta: "Enfoque", valor: nombreMusculo(datos.musculoObjetivo) });
@@ -1052,6 +1060,7 @@ const formularioEntrenamiento = document.getElementById("workoutForm");
         mostrarErrorFormulario("");
         actualizarCompatibles();
         actualizarDesgloseTiempo();
+        actualizarFatiga();
         if (pasoActual === TOTAL_PASOS) {
             actualizarResumenConfiguracion();
             actualizarResumenEnfoque();
@@ -1274,3 +1283,174 @@ function mostrarDetalleEnfoque(resultado) {
         ${avisos.map(a => `<p class="focus-note">${a}</p>`).join("")}
     `;
 }
+
+
+// ==================================================
+// 18. FATIGA MUSCULAR POR NIVELES
+// ==================================================
+//
+// El usuario elige uno de 4 niveles por músculo. Cada nivel se guarda
+// como un número (0, 3, 6 o 9) que leen los algoritmos:
+//   - 3 y 6 reducen el trabajo permitido del músculo (−15 % y −30 %).
+//   - 9 (> 7) excluye los ejercicios que lo trabajan.
+
+const NIVELES_FATIGA = [
+    { valor: 0, nombre: "Descansado" },
+    { valor: 3, nombre: "Algo cargado", efecto: "haremos un poco menos de trabajo para este músculo" },
+    { valor: 6, nombre: "Cansado", efecto: "reduciremos bastante el trabajo de este músculo" },
+    { valor: 9, nombre: "Con dolor" }
+];
+
+const ENTRADAS_FATIGA = {
+    piernas: "fatigaPiernas",
+    gluteos: "fatigaGluteos",
+    pantorrillas: "fatigaPantorrillas",
+    pecho: "fatigaPecho",
+    espalda: "fatigaEspalda",
+    hombros: "fatigaHombros",
+    biceps: "fatigaBiceps",
+    triceps: "fatigaTriceps",
+    abdomen: "fatigaAbdomen"
+};
+
+function nivelFatiga(valor) {
+    if (valor > 7) return 3;
+    if (valor >= 6) return 2;
+    if (valor >= 3) return 1;
+    return 0;
+}
+
+function fijarFatiga(musculo, valor) {
+    const entrada = document.getElementById(ENTRADAS_FATIGA[musculo]);
+    if (!entrada || Number(entrada.value) === valor) return;
+    entrada.value = valor;
+    entrada.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function construirFatiga() {
+
+    const contenedor = document.getElementById("fatigueZones");
+    if (!contenedor) return;
+
+    contenedor.replaceChildren(
+        ...Object.values(ZONAS_ENFOQUE).map(zona => {
+
+            const seccion = document.createElement("section");
+            seccion.className = "fatigue-zone";
+
+            const titulo = document.createElement("h4");
+            titulo.textContent = zona.nombre;
+            seccion.appendChild(titulo);
+
+            zona.musculos.forEach(musculo => {
+
+                const grupo = document.createElement("fieldset");
+                grupo.className = "fatigue-muscle lvl-0";
+                grupo.id = `fatiga-fila-${musculo}`;
+
+                const leyenda = document.createElement("legend");
+                leyenda.textContent = nombreMusculo(musculo);
+
+                const opciones = document.createElement("div");
+                opciones.className = "fatigue-levels";
+
+                NIVELES_FATIGA.forEach((nivel, indice) => {
+                    const etiqueta = document.createElement("label");
+                    etiqueta.className = `fatigue-level lvl-${indice}`;
+
+                    const radio = document.createElement("input");
+                    radio.type = "radio";
+                    radio.name = `nivel-fatiga-${musculo}`;
+                    radio.value = nivel.valor;
+                    radio.checked = indice === 0;
+                    radio.addEventListener("change", () => fijarFatiga(musculo, nivel.valor));
+
+                    const texto = document.createElement("span");
+                    texto.textContent = nivel.nombre;
+
+                    etiqueta.append(radio, texto);
+                    opciones.appendChild(etiqueta);
+                });
+
+                const efecto = document.createElement("p");
+                efecto.className = "fatigue-effect";
+                efecto.id = `fatiga-efecto-${musculo}`;
+
+                grupo.append(leyenda, opciones, efecto);
+                seccion.appendChild(grupo);
+            });
+
+            return seccion;
+        })
+    );
+
+    document.getElementById("resetFatigueBtn")?.addEventListener("click", () => {
+        Object.keys(ENTRADAS_FATIGA).forEach(musculo => {
+            const primero = document.querySelector(`input[name="nivel-fatiga-${musculo}"][value="0"]`);
+            if (primero) primero.checked = true;
+            fijarFatiga(musculo, 0);
+        });
+        actualizarFatiga();
+    });
+
+    actualizarFatiga();
+}
+
+// Explica en tiempo real qué pasará con cada músculo y cuántos
+// ejercicios quedan disponibles.
+function actualizarFatiga() {
+
+    const resumen = document.getElementById("fatigueSummary");
+    if (!resumen) return;
+
+    const datos = obtenerDatosFormulario();
+    const posibles = EJERCICIOS.filter(e => ejercicioDisponible(e, { ...datos, fatiga: {} }));
+    const conteo = [0, 0, 0, 0];
+
+    Object.keys(ENTRADAS_FATIGA).forEach(musculo => {
+
+        const nivel = nivelFatiga(datos.fatiga[musculo] ?? 0);
+        conteo[nivel]++;
+
+        const fila = document.getElementById(`fatiga-fila-${musculo}`);
+        const efecto = document.getElementById(`fatiga-efecto-${musculo}`);
+        if (!fila || !efecto) return;
+
+        fila.className = `fatigue-muscle lvl-${nivel}`;
+
+        const radio = fila.querySelector(`input[value="${NIVELES_FATIGA[nivel].valor}"]`);
+        if (radio && !radio.checked) radio.checked = true;
+
+        if (nivel === 0) {
+            efecto.textContent = "";
+        } else if (nivel < 3) {
+            efecto.textContent = `${NIVELES_FATIGA[nivel].efecto.charAt(0).toUpperCase()}${NIVELES_FATIGA[nivel].efecto.slice(1)}.`;
+        } else {
+            const evitados = posibles.filter(e =>
+                e.claveMuscular === musculo || (e.musculosSecundarios || []).includes(musculo)
+            );
+            const nombres = evitados.slice(0, 3).map(e => e.nombre.toLowerCase());
+            efecto.textContent = evitados.length
+                ? `Hoy evitaremos ${evitados.length === 1 ? "1 ejercicio" : `${evitados.length} ejercicios`}: ` +
+                  nombres.join(", ") +
+                  (evitados.length > 3 ? ` y ${evitados.length - 3} más` : "") + "."
+                : "No hay ejercicios de este músculo con tu equipo y nivel.";
+        }
+    });
+
+    const disponibles = contarEjerciciosCompatibles(datos);
+    const partes = [];
+    if (conteo[3]) partes.push(`${conteo[3]} con dolor`);
+    if (conteo[2]) partes.push(`${conteo[2]} ${conteo[2] === 1 ? "cansado" : "cansados"}`);
+    if (conteo[1]) partes.push(`${conteo[1]} algo ${conteo[1] === 1 ? "cargado" : "cargados"}`);
+
+    resumen.classList.toggle("is-warning", disponibles === 0);
+    resumen.innerHTML = disponibles === 0
+        ? "No queda ningún ejercicio disponible. Cambia algún músculo de <strong>Con dolor</strong> a otro nivel."
+        : (partes.length
+            ? `Músculos: ${partes.join(", ")}. `
+            : "Todos tus músculos están descansados. ") +
+          `Puedes hacer <strong>${disponibles} de ${posibles.length}</strong> ejercicios posibles con tu nivel y equipo.`;
+}
+
+construirFatiga();

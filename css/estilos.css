@@ -183,3 +183,85 @@ button,input,select{font:inherit}.app-shell{max-width:1200px;margin:auto;padding
 .dose-chip.is-main{background:#132219;border-color:rgba(183,243,107,.35)}
 .dose-chip.is-main b{color:var(--green)}
 .exercise-info small.dose-effort{font-size:10px;color:#a5b3c5;margin-top:6px;line-height:1.5}
+
+/* ===== Fase 11: portada con foto (entrenamiento en casa) ===== */
+.home-hero{position:relative;min-height:640px;margin:26px 0 30px;border-radius:28px;overflow:hidden;background:#101927;border:1px solid var(--line);isolation:isolate}
+.home-hero.active{display:flex;align-items:center}
+.home-photo{position:absolute;inset:0;z-index:-2;background-color:#16222f;background-image:url("https://images.pexels.com/photos/8173428/pexels-photo-8173428.jpeg?auto=compress&cs=tinysrgb&w=1920");background-size:cover;background-position:62% 50%;transform:scale(1.02);animation:homeZoom 14s ease-out both}
+@keyframes homeZoom{from{transform:scale(1.08)}to{transform:scale(1.02)}}
+.home-overlay{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(8,13,22,.94) 0%,rgba(8,13,22,.82) 34%,rgba(8,13,22,.35) 64%,rgba(8,13,22,.1) 100%),linear-gradient(0deg,rgba(8,13,22,.55),transparent 40%)}
+.home-content{position:relative;max-width:540px;padding:64px 56px}
+.home-content h1{margin:22px 0 20px}
+.home-content .hero-description{color:#c3cede;max-width:430px}
+.home-perks{list-style:none;padding:0;margin:30px 0 0;display:flex;flex-wrap:wrap;gap:10px}
+.home-perks li{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:999px;background:rgba(16,25,39,.72);border:1px solid rgba(145,160,180,.25);backdrop-filter:blur(6px);font-size:12px;font-weight:600;color:#e3eaf3}
+.home-perks svg{width:17px;height:17px;fill:none;stroke:var(--green);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.photo-credit{position:absolute;right:18px;bottom:14px;font-size:10px;color:rgba(226,234,243,.7);background:rgba(8,13,22,.45);padding:4px 8px;border-radius:6px}
+.photo-credit a{color:inherit}
+@media(prefers-reduced-motion:reduce){.home-photo{animation:none}}
+@media(max-width:800px){
+  .home-hero{min-height:calc(100svh - 120px);align-items:flex-end}
+  .home-photo{background-image:url("https://images.pexels.com/photos/8173428/pexels-photo-8173428.jpeg?auto=compress&cs=tinysrgb&w=1000");background-position:58% 30%}
+  .home-overlay{background:linear-gradient(0deg,rgba(8,13,22,.97) 0%,rgba(8,13,22,.88) 42%,rgba(8,13,22,.25) 72%,rgba(8,13,22,.05) 100%)}
+  .home-content{padding:36px 26px 54px;max-width:none}
+}
+@media(max-width:560px){
+  .home-hero{margin:14px -17px 18px;border-radius:0;border-left:0;border-right:0;min-height:calc(100svh - 90px)}
+  .home-content{padding:28px 20px 50px}
+  .home-content h1{font-size:46px;letter-spacing:-2.4px}
+  .home-content .btn-large{width:100%;justify-content:space-between}
+  .home-perks li{font-size:11px;padding:8px 11px}
+}
+@media(max-width:800px){
+  .home-hero{flex-direction:column;justify-content:flex-end}
+  .home-photo{bottom:auto;height:58%;background-position:60% 55%}
+  .home-overlay{background:linear-gradient(0deg,#0b131e 0%,#0b131e 44%,rgba(11,19,30,.75) 52%,rgba(11,19,30,0) 66%)}
+  .home-content{padding-top:0}
+  .photo-credit{top:12px;bottom:auto;right:12px}
+}
+@media(max-width:560px){
+  .home-content h1{font-size:42px;margin:16px 0 14px}
+  .home-content .hero-description{font-size:14px;line-height:1.65;margin-bottom:22px}
+  .home-perks{margin-top:20px}
+}
+/* Si existe img/portada.jpg se usa esa copia local (funciona sin internet);
+   si no, se ve la foto enlazada desde Pexels que queda debajo. */
+.home-photo{background-image:url("../img/portada.jpg"),url("https://images.pexels.com/photos/8173428/pexels-photo-8173428.jpeg?auto=compress&cs=tinysrgb&w=1920")}
+@media(max-width:800px){.home-photo{background-image:url("../img/portada.jpg"),url("https://images.pexels.com/photos/8173428/pexels-photo-8173428.jpeg?auto=compress&cs=tinysrgb&w=1000")}}
+
+/* ===== Fase 12: fatiga por niveles ===== */
+.fatigue-legend{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.fatigue-legend li{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:#0c1623;border:1px solid #26384b}
+.fatigue-legend i{width:10px;height:10px;border-radius:50%;flex:none;margin-top:3px;background:var(--lvl)}
+.fatigue-legend strong{display:block;font-size:12px;margin-bottom:2px}
+.fatigue-legend span{font-size:10px;color:var(--muted);line-height:1.4}
+.lvl-0{--lvl:#b7f36b;--lvl-bg:#132219}
+.lvl-1{--lvl:#f0dc6a;--lvl-bg:#24230f}
+.lvl-2{--lvl:#ffaf5f;--lvl-bg:#2a1d10}
+.lvl-3{--lvl:#ff8585;--lvl-bg:#2c1416}
+.fatigue-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.fatigue-toolbar .btn{padding:11px 16px;border-radius:11px;font-size:12px}
+.fatigue-toolbar-hint{font-size:11px;color:var(--muted)}
+.fatigue-zones{display:grid;gap:20px}
+.fatigue-zone h4{margin:0 0 10px;font:600 11px var(--font);letter-spacing:1.2px;text-transform:uppercase;color:var(--green)}
+.fatigue-muscle{border:1px solid #26384b;border-left:3px solid var(--lvl);border-radius:12px;padding:12px 14px;margin:0 0 8px;background:#0c1623;min-width:0;transition:border-color .2s}
+.fatigue-muscle legend{float:left;width:100%;padding:0;margin-bottom:9px;font-size:13px;font-weight:600}
+.fatigue-levels{clear:both;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.fatigue-level{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;min-height:42px;padding:6px 8px;border-radius:9px;border:1px solid #2b3d52;background:#101b29;font-size:11px;font-weight:600;color:#b7c3d3;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.fatigue-level input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.fatigue-level:hover{border-color:var(--lvl)}
+.fatigue-level:has(input:checked){background:var(--lvl-bg);border-color:var(--lvl);color:var(--lvl)}
+.fatigue-level:has(input:focus-visible){outline:2px solid var(--lvl);outline-offset:2px}
+.fatigue-effect{margin:8px 0 0;font-size:11px;line-height:1.5;color:var(--lvl)}
+.fatigue-effect:empty{display:none}
+.fatigue-summary{margin-top:16px;padding:12px 14px;border-radius:11px;background:#0c1623;border:1px solid #26384b;font-size:12px;line-height:1.6;color:#c3cede}
+.fatigue-summary strong{color:var(--green)}
+.fatigue-summary.is-warning{border-color:rgba(255,133,133,.45);color:var(--danger)}
+.fatigue-safety{margin-top:12px}
+@media(max-width:800px){.fatigue-legend{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.fatigue-levels{grid-template-columns:1fr 1fr}}
+@media(min-width:901px){
+  .fatigue-zone{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+  .fatigue-zone h4{grid-column:1/-1;margin-bottom:2px}
+  .fatigue-zone .fatigue-muscle{margin:0}
+}

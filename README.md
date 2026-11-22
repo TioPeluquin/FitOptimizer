@@ -116,3 +116,26 @@ Cada ejercicio del plan indica series, repeticiones (o segundos), descanso y esf
 - Tiempo por serie = repeticiones × 3 s (× 2 si es por lado) + descanso, redondeado a medio minuto. En la rutina automática y el catálogo, las series salen de los minutos del ejercicio; en el enfoque muscular, este tiempo entra en la restricción de la optimización.
 
 **Fundamentos:** continuo de repeticiones (Schoenfeld et al., 2021, *Sports* 9(2):32); resistencia local con muchas repeticiones y descansos menores a 90 s (ACSM, 2009); descansos de 3 min frente a 1 min dieron más fuerza e hipertrofia en entrenados (Schoenfeld et al., 2016, *JSCR* 30(7)).
+
+## Foto de portada
+La portada usa la foto "A man and woman working out together" de **Kampus Production** en Pexels (licencia libre de Pexels):
+https://www.pexels.com/photo/a-man-and-woman-working-out-together-8173428/
+
+- Por defecto se carga desde internet.
+- Para que funcione sin conexión, descárgala y guárdala como `img/portada.jpg`; la app usará esa copia automáticamente.
+- Sin internet y sin la copia local, la portada muestra un fondo oscuro y el texto sigue siendo legible.
+
+## Fatiga muscular (paso 3)
+Para cada músculo, agrupado en tren superior, tren inferior y core, el usuario elige un nivel:
+
+| Nivel | Valor interno | Efecto en la rutina |
+|---|---|---|
+| Descansado | 0 | Rutina normal |
+| Algo cargado | 3 | −15 % de trabajo permitido para ese músculo |
+| Cansado | 6 | −30 % de trabajo permitido |
+| Con dolor | 9 | Se evitan los ejercicios que lo trabajan (principal o secundario) |
+
+- Rutina automática: el límite de minutos por músculo (20) se multiplica por `1 − 0,05·fatiga`.
+- Enfoque muscular: el volumen productivo por sesión (`K = 11`) se multiplica por el mismo factor.
+- La pantalla explica en tiempo real qué ejercicios se evitan y cuántos quedan disponibles, e incluye el botón "Estoy descansado".
+- "Con dolor" se refiere a agujetas normales; ante dolor agudo o articular se recomienda consultar a un profesional.

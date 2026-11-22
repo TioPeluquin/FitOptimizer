@@ -25,6 +25,15 @@ const VALOR_NIVEL = {
 };
 
 
+// Límite de minutos por grupo muscular según su fatiga previa:
+// cada punto de fatiga reduce el límite un 5 %
+// (algo cargado = 3 → −15 %, cansado = 6 → −30 %).
+function limiteMuscular(grupo, fatiga = {}) {
+    return CONFIG_ALGORITMO.maximoMinutosMusculares *
+        (1 - 0.05 * (fatiga[grupo] ?? 0));
+}
+
+
 // ==================================================
 // 2. OBTENER BENEFICIO SEGÚN EL OBJETIVO
 // ==================================================
@@ -113,7 +122,8 @@ function calcularCargaMuscular(ejerciciosSeleccionados) {
 function calcularAptitud(
     ejerciciosSeleccionados,
     tiempoMaximo,
-    objetivo
+    objetivo,
+    fatiga = {}
 ) {
 
     const tiempoTotal = ejerciciosSeleccionados.reduce(
@@ -137,11 +147,11 @@ function calcularAptitud(
 
     const penalizacionCarga =
         CONFIG_ALGORITMO.penalizacionCarga *
-        Object.values(cargaMuscular).reduce(
-            (suma, minutos) =>
+        Object.entries(cargaMuscular).reduce(
+            (suma, [grupo, minutos]) =>
                 suma + Math.max(
                     0,
-                    minutos - CONFIG_ALGORITMO.maximoMinutosMusculares
+                    minutos - limiteMuscular(grupo, fatiga)
                 ),
             0
         );
@@ -166,7 +176,7 @@ function calcularAptitud(
 // 7. COMPROBAR SI UNA RUTINA ES VÁLIDA
 // ==================================================
 
-function esRutinaValida(ejerciciosSeleccionados, tiempoMaximo) {
+function esRutinaValida(ejerciciosSeleccionados, tiempoMaximo, fatiga = {}) {
 
     const tiempoTotal = ejerciciosSeleccionados.reduce(
         (suma, ejercicio) => suma + ejercicio.minutos,
@@ -180,9 +190,9 @@ function esRutinaValida(ejerciciosSeleccionados, tiempoMaximo) {
     return (
         tiempoTotal > 0 &&
         tiempoTotal <= tiempoMaximo &&
-        Object.values(cargaMuscular).every(
-            minutos =>
-                minutos <= CONFIG_ALGORITMO.maximoMinutosMusculares
+        Object.entries(cargaMuscular).every(
+            ([grupo, minutos]) =>
+                minutos <= limiteMuscular(grupo, fatiga)
         )
     );
 }
@@ -224,7 +234,8 @@ function repararCromosoma(
     cromosoma,
     ejerciciosDisponibles,
     tiempoMaximo,
-    objetivo
+    objetivo,
+    fatiga = {}
 ) {
 
     const cromosomaReparado = [...cromosoma];
@@ -236,7 +247,7 @@ function repararCromosoma(
 
     while (
         seleccionados.length > 0 &&
-        !esRutinaValida(seleccionados, tiempoMaximo)
+        !esRutinaValida(seleccionados, tiempoMaximo, fatiga)
     ) {
 
         const indicesSeleccionados = cromosomaReparado
@@ -281,14 +292,16 @@ function evaluarCromosoma(
     cromosoma,
     ejerciciosDisponibles,
     tiempoMaximo,
-    objetivo
+    objetivo,
+    fatiga = {}
 ) {
 
     const cromosomaReparado = repararCromosoma(
         cromosoma,
         ejerciciosDisponibles,
         tiempoMaximo,
-        objetivo
+        objetivo,
+        fatiga
     );
 
     const seleccionados = decodificarCromosoma(
@@ -299,7 +312,8 @@ function evaluarCromosoma(
     const estadisticas = calcularAptitud(
         seleccionados,
         tiempoMaximo,
-        objetivo
+        objetivo,
+        fatiga
     );
 
     return {
@@ -308,7 +322,8 @@ function evaluarCromosoma(
         ...estadisticas,
         valido: esRutinaValida(
             seleccionados,
-            tiempoMaximo
+            tiempoMaximo,
+            fatiga
         )
     };
 }
@@ -496,7 +511,8 @@ function generarRutina(datos) {
             ),
             ejerciciosDisponibles,
             datos.tiempoMaximo,
-            datos.objetivo
+            datos.objetivo,
+            datos.fatiga
         )
     );
 
@@ -505,7 +521,8 @@ function generarRutina(datos) {
             Array(ejerciciosDisponibles.length).fill(0),
             ejerciciosDisponibles,
             datos.tiempoMaximo,
-            datos.objetivo
+            datos.objetivo,
+            datos.fatiga
         )
     );
 
@@ -548,7 +565,8 @@ function generarRutina(datos) {
                     hijo,
                     ejerciciosDisponibles,
                     datos.tiempoMaximo,
-                    datos.objetivo
+                    datos.objetivo,
+                    datos.fatiga
                 )
             );
         }

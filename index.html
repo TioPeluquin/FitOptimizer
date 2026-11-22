@@ -51,95 +51,59 @@
              PANTALLA DE INICIO
         =========================================== -->
 
-        <section id="homeScreen" class="screen hero-screen active">
+        <section id="homeScreen" class="screen home-hero active">
 
-            <div class="hero-copy">
+            <div
+                class="home-photo"
+                role="img"
+                aria-label="Un hombre y una mujer haciendo flexiones sobre colchonetas en el living de su casa"
+            ></div>
+
+            <div class="home-overlay" aria-hidden="true"></div>
+
+            <div class="home-content">
 
                 <div class="eyebrow">
                     <span class="eyebrow-line"></span>
-                    ENTRENA CON INTENCIÓN
+                    ENTRENA EN CASA
                 </div>
 
                 <h1>
+                    Tu casa.<br>
                     Tu tiempo.<br>
-                    Tu objetivo.<br>
                     <span class="gradient-text">Tu mejor rutina.</span>
                 </h1>
 
                 <p class="hero-description">
-                    Crea una rutina de entrenamiento adaptada a tu tiempo disponible,
-                    equipamiento, nivel de experiencia y estado muscular.
+                    Rutinas para entrenar en casa, adaptadas a tu tiempo,
+                    a lo que tienes a mano y a cómo se siente tu cuerpo hoy.
                 </p>
 
                 <button class="btn btn-primary btn-large" id="startBtn">
                     Crear mi rutina <span aria-hidden="true">→</span>
                 </button>
 
-                <div class="hero-note">
-                    <span class="sparkle">✦</span>
-                    Rutinas personalizadas según tu tiempo, tu equipo y tu cuerpo
-                </div>
+                <ul class="home-perks">
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg>
+                        Sin gimnasio
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 3h5"/></svg>
+                        De 15 a 60 min
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M3.5 9v6M6 7.5v9M18 7.5v9M20.5 9v6"/></svg>
+                        Con o sin equipo
+                    </li>
+                </ul>
 
             </div>
 
-
-            <div class="hero-visual" aria-label="Resumen ilustrativo de entrenamiento">
-
-                <div class="orb orb-one"></div>
-                <div class="orb orb-two"></div>
-
-                <div class="visual-card visual-card-main">
-
-                    <div class="visual-card-top">
-                        <span class="mini-label">FITOPTIMIZER / 01</span>
-                        <span class="live-pill">● ACTIVO</span>
-                    </div>
-
-                    <div class="visual-number">
-                        30<span> MIN</span>
-                    </div>
-
-                    <div class="visual-caption">
-                        Tu sesión, optimizada
-                    </div>
-
-                    <div class="progress-track">
-                        <div class="progress-fill"></div>
-                    </div>
-
-                    <div class="visual-bottom">
-                        <span>Tiempo disponible</span>
-                        <strong>100%</strong>
-                    </div>
-
-                </div>
-
-                <div class="floating-chip chip-top">
-                    <span class="chip-icon">↗</span>
-                    <span>
-                        <strong>Puntaje</strong>
-                        <small>Evaluación de rutina</small>
-                    </span>
-                </div>
-
-                <div class="floating-chip chip-bottom">
-                    <span class="chip-icon green">✓</span>
-                    <span>
-                        <strong>Restricciones</strong>
-                        <small>Tiempo y recuperación</small>
-                    </span>
-                </div>
-
-                <div class="visual-ring"></div>
-
-            </div>
-
-
-            <div class="hero-footer">
-                <span>01 — PLANIFICA</span>
-                <span>02 — OPTIMIZA</span>
-                <span>03 — ENTRENA</span>
-            </div>
+            <small class="photo-credit">
+                Foto: Kampus Production en
+                <a href="https://www.pexels.com/photo/a-man-and-woman-working-out-together-8173428/" target="_blank" rel="noopener">Pexels</a>
+            </small>
 
         </section>
 
@@ -311,58 +275,61 @@
                      PASO 3. FATIGA MUSCULAR
                 =================================== -->
 
-                <div class="setup-step form-card" data-step="3"
-                     data-title="Fatiga previa"
-                     data-subtitle="Indica cómo se encuentra cada grupo muscular (0 a 10).">
+<div class="setup-step form-card" data-step="3"
+                     data-title="¿Cómo está tu cuerpo hoy?"
+                     data-subtitle="Marca cómo sientes cada músculo y adaptaremos la rutina.">
 
                     <div class="card-heading">
                         <span class="step-number">03</span>
                         <div>
-                            <h3>¿Cómo está tu cuerpo?</h3>
-                            <p>0 = descansado · 10 = muy fatigado.</p>
+                            <h3>Fatiga muscular</h3>
+                            <p>Así evitamos cargar músculos que todavía se están recuperando.</p>
                         </div>
                     </div>
 
-                    <div class="fatigue-grid">
+                    <!-- Qué significa cada nivel -->
+                    <ul class="fatigue-legend" aria-label="Qué significa cada nivel">
+                        <li class="lvl-0"><i></i><span><strong>Descansado</strong>Rutina normal</span></li>
+                        <li class="lvl-1"><i></i><span><strong>Algo cargado</strong>Un poco menos de trabajo</span></li>
+                        <li class="lvl-2"><i></i><span><strong>Cansado</strong>Bastante menos trabajo</span></li>
+                        <li class="lvl-3"><i></i><span><strong>Con dolor</strong>Hoy no lo entrenamos</span></li>
+                    </ul>
 
-                        <label for="fatigaPiernas">Piernas <output id="valorPiernas">0</output>
-                            <input id="fatigaPiernas" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaGluteos">Glúteos <output id="valorGluteos">0</output>
-                            <input id="fatigaGluteos" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaPantorrillas">Pantorrillas <output id="valorPantorrillas">0</output>
-                            <input id="fatigaPantorrillas" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaPecho">Pecho <output id="valorPecho">0</output>
-                            <input id="fatigaPecho" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaEspalda">Espalda <output id="valorEspalda">0</output>
-                            <input id="fatigaEspalda" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaHombros">Hombros <output id="valorHombros">0</output>
-                            <input id="fatigaHombros" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaBiceps">Bíceps <output id="valorBiceps">0</output>
-                            <input id="fatigaBiceps" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaTriceps">Tríceps <output id="valorTriceps">0</output>
-                            <input id="fatigaTriceps" type="range" min="0" max="10" value="0"></label>
-
-                        <label for="fatigaAbdomen">Abdomen / Core <output id="valorAbdomen">0</output>
-                            <input id="fatigaAbdomen" type="range" min="0" max="10" value="0"></label>
-
+                    <div class="fatigue-toolbar">
+                        <button type="button" class="btn btn-secondary" id="resetFatigueBtn">
+                            Estoy descansado
+                        </button>
+                        <span class="fatigue-toolbar-hint">Deja todos los músculos en "Descansado".</span>
                     </div>
 
-                    <p class="field-hint">
-                        Los ejercicios que trabajen un grupo con fatiga superior a 7
-                        se excluirán de la selección.
+                    <!-- Se genera desde js/app.js (sección 18) -->
+                    <div id="fatigueZones" class="fatigue-zones"></div>
+
+                    <!-- Valores numéricos que leen los algoritmos (0, 3, 6 o 9) -->
+                    <div hidden>
+                        <input type="hidden" id="fatigaPiernas" value="0">
+                        <input type="hidden" id="fatigaGluteos" value="0">
+                        <input type="hidden" id="fatigaPantorrillas" value="0">
+                        <input type="hidden" id="fatigaPecho" value="0">
+                        <input type="hidden" id="fatigaEspalda" value="0">
+                        <input type="hidden" id="fatigaHombros" value="0">
+                        <input type="hidden" id="fatigaBiceps" value="0">
+                        <input type="hidden" id="fatigaTriceps" value="0">
+                        <input type="hidden" id="fatigaAbdomen" value="0">
+                    </div>
+
+                    <div id="fatigueSummary" class="fatigue-summary" aria-live="polite"></div>
+
+                    <p class="field-hint fatigue-safety">
+                        "Con dolor" se refiere a las agujetas normales después de entrenar.
+                        Si sientes un dolor agudo, en una articulación o que no mejora con los días,
+                        consulta a un profesional de la salud antes de entrenar.
                     </p>
 
                 </div>
 
 
-                <!-- ==================================
+                                <!-- ==================================
                      PASO 4. MODALIDAD DE ENTRENAMIENTO
                 =================================== -->
 
